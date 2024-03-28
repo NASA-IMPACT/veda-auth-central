@@ -1,77 +1,16 @@
-variable "environment" {
-  description = "Environment name (development, production, etc)"
-  type        = string
-}
-
-variable "namespace" {
-  description = "Application namespace"
-  type        = string
-}
-
-variable "region" {
-  description = "AWS region to target"
-  type        = string
-}
-
-variable "enable_network" {
-  description = "Use network module. Set to false to use your own network resources"
-  type        = bool
-  default     = true
-}
-
-variable "vpc_id" {
-  description = "AWS VPC ID (if not using network module)"
-  type        = string
-  default     = ""
-}
-
-variable "vpc_cidr" {
-  description = "RFC1918 CIDR range for VPC"
-  type        = string
-  default     = ""
-}
-
-variable "public_cidr" {
-  description = "RFC1918 CIDR range for public subnets (subset of vpc_cidr)"
-  type        = string
-  default     = ""
-}
-
-variable "private_cidr" {
-  description = "RFC1918 CIDR range for private subnets (subset of vpc_cidr)"
-  type        = string
-  default     = ""
-}
-
-variable "public_subnet_ids" {
-  description = "List of public subnet IDs for deployment if not using network module"
-  type        = list(string)
-  default     = []
-}
-
-variable "private_subnet_ids" {
-  description = "List of private subnet IDs for deployment if not using network module"
-  type        = list(string)
-  default     = []
-}
-
-variable "tags" {
-  description = "Standard tags for all resources"
-  type        = map(any)
-  default     = {
-    ManagedBy = "Terraform"
-  }
-}
-
 variable "alb_certificate_arn" {
-  description = "ACM certificate used by ALB"
+  description = "ACM certificate ARN used by ALB"
   type        = string
 }
 
 variable "alb_destroy_log_bucket" {
   description = "Destroy ALB log bucket on teardown"
   type        = bool
-  default     = true
+}
+
+variable "rds_source_region" {
+  description = "Region of primary RDS cluster (needed to support encryption)"
+  type        = string
 }
 
 variable "container_cpu_units" {
@@ -89,10 +28,15 @@ variable "container_memory_reserved" {
   type        = number
 }
 
-variable "keycloak_container_port" {
+variable "container_port" {
   description = "Keycloak port exposed in container"
   type        = number
-  default     = 8080
+}
+
+variable "db_allowed_cidr_blocks" {
+  description = "List of CIDR blocks allowed to access DB cluster"
+  type        = list(string)
+  default     = []
 }
 
 variable "db_backup_retention_days" {
@@ -103,13 +47,11 @@ variable "db_backup_retention_days" {
 variable "db_backup_window" {
   description = "Daily time range during which backups happen"
   type        = string
-  default     = "00:00-02:00"
 }
 
 variable "db_cluster_family" {
   description = "Family of DB cluster parameter group"
   type        = string
-  default     = "aurora-postgresql15"
 }
 
 variable "db_cluster_size" {
@@ -120,7 +62,6 @@ variable "db_cluster_size" {
 variable "db_engine_version" {
   description = "Version of DB engine to use"
   type        = string
-  default     = "15.4"
 }
 
 variable "db_instance_type" {
@@ -131,13 +72,11 @@ variable "db_instance_type" {
 variable "db_maintenance_window" {
   description = "Weekly time range during which system maintenance can occur (UTC)"
   type        = string
-  default     = "sat:03:00-sat:04:00"
 }
 
 variable "deletion_protection" {
-  description = "Protect supporting resources from being deleted (ALB and RDS)"
+  description = "Protect resources from being deleted"
   type        = bool
-  default     = false
 }
 
 variable "deployment_maximum_percent" {
@@ -155,13 +94,13 @@ variable "desired_count" {
   type        = number
 }
 
-variable "keycloak_dns_name" {
+variable "dns_name" {
   description = "Keycloak DNS"
   type        = string
 }
 
 variable "dns_zone_id" {
-  description = "Route53 Zone ID hosting Services"
+  description = "Route53 Zone ID hosting Keycloak"
   type        = string
 }
 
@@ -171,28 +110,31 @@ variable "encryption_configuration" {
     kms_key         = any
   })
   description = "ECR encryption configuration"
-  default = {
-    encryption_type = "AES256"
-    kms_key         = null
-  }
+}
+
+variable "environment" {
+  description = "Environment name (development, production, etc)"
+  type        = string
 }
 
 variable "http_redirect" {
   description = "Controls whether port 80 should redirect to 443 (or not listen)"
   type        = bool
-  default     = true
 }
 
 variable "http_ingress_cidr_blocks" {
   description = "CIDR ranges allowed to connect to service port 80"
   type        = list(string)
-  default     = ["0.0.0.0/0"]
 }
 
 variable "https_ingress_cidr_blocks" {
   description = "CIDR ranges allowed to connect to service port 443"
   type        = list(string)
-  default     = ["0.0.0.0/0"]
+}
+
+variable "internal" {
+  description = "Whether environment should be exposed to Internet (if not using network module)"
+  type        = bool
 }
 
 variable "jvm_heap_min" {
@@ -215,27 +157,44 @@ variable "jvm_meta_max" {
   type        = number
 }
 
-variable "internal" {
-  description = "Whether environment should be exposed to Internet (if not using network module)"
-  type        = string
-  default     = false
-}
-
 variable "log_retention_days" {
   description = "Log retention for CloudWatch logs"
   type        = number
 }
 
-variable "rds_source_region" {
-  description = "Region of primary RDS cluster (needed to support encryption)"
+variable "name" {
+  description = "Used by modules to construct labels"
   type        = string
-  default     = ""
+}
+
+variable "namespace" {
+  description = "Used by modules to construct labels"
+  type        = string
+}
+
+variable "private_subnet_ids" {
+  description = "List of private subnet IDs"
+  type        = list(string)
+}
+
+variable "private_subnet_cidrs" {
+  description = "List of private subnet CIDR ranges"
+  type        = list(string)
+}
+
+variable "public_subnet_ids" {
+  description = "List of public subnet IDs"
+  type        = list(string)
+}
+
+variable "region" {
+  description = "AWS region to target"
+  type        = string
 }
 
 variable "route_table_ids" {
   description = "List of route tables used by s3 VPC endpoint (if not using network module)"
   type        = list(string)
-  default     = []
 }
 
 variable "stickiness" {
@@ -244,8 +203,29 @@ variable "stickiness" {
     enabled         = bool
   })
   description = "Target group sticky configuration"
-  default = {
-    cookie_duration = null
-    enabled         = false
-  }
+}
+
+variable "tags" {
+  description = "Default tags applied to resources"
+  type        = map(string)
+}
+
+variable "vpc_id" {
+  description = "AWS VPC ID"
+  type        = string
+}
+
+variable "ecr_repository_name" {
+  description = "Name of the ECR Repository"
+  default = "keycloak"
+}
+
+variable "docker_image_name" {
+  description = "Name of the Docker Image"
+  default = "keycloak-veda"
+}
+
+variable "docker_image_tag" {
+  description = "The Version Tag for the Docker Image"
+  default = "latest"
 }
