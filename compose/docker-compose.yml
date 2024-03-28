@@ -1,0 +1,34 @@
+version: "3.8"
+services:
+
+  db:
+    image: bitnami/postgresql:15.3.0
+    ports:
+      - "15432:5432"
+    environment:
+      - POSTGRESQL_USERNAME=postgres
+      - POSTGRESQL_PASSWORD=example
+      - POSTGRES_PASSWORD=example
+      - POSTGRESQL_DATABASE=veda-auth
+      - POSTGRES_MULTIPLE_DATABASES=keycloak
+    volumes:
+      - ./dbinit:/docker-entrypoint-initdb.d
+    healthcheck:
+      test:
+        [
+          "CMD",
+          "pg_isready",
+          "--username=postgres",
+          "--host=127.0.0.1",
+          "--port=5432"
+        ]
+      interval: 2s
+      timeout: 1m
+      retries: 5
+      start_period: 10s
+
+  adminer:
+    image: adminer
+    restart: always
+    ports:
+      - 18080:8080
