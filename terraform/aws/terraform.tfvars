@@ -1,14 +1,14 @@
 environment = "dev"
-namespace = "veda-auth-central"
+namespace   = "veda-auth-central"
 region      = "us-east-2"
 
 vpc_cidr     = "10.20.30.0/24"
 public_cidr  = "10.20.30.0/25"
 private_cidr = "10.20.30.128/25"
 
-alb_certificate_arn = "arn:aws:acm:us-east-2:444055461661:certificate/ee2e60b2-aee3-435c-a05a-181081bb4f7a"
-keycloak_dns_name = "veda.usecustos.org"
-dns_zone_id = "Z0928161AO8DT4S0II3Z"
+alb_certificate_arn = "arn:aws:acm:us-east-2:444055461661:certificate/f1d83468-c073-49f9-bbfa-b038135ae400"
+keycloak_dns_name   = "auth.veda.usecustos.org"
+dns_zone_id         = "Z0928161AO8DT4S0II3Z"
 
 container_cpu_units                = 1024
 container_memory_limit             = 2048
