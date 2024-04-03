@@ -1,0 +1,1 @@
+Sample codes for how the VEDA app uses the authentication and authorizations
