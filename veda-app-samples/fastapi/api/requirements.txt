@@ -1,0 +1,8 @@
+uvicorn
+pydantic_settings
+fastapi
+fastapi-keycloak
+httpx
+python-multipart
+pyjwt
+cryptography
