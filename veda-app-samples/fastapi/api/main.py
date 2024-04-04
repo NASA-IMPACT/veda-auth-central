@@ -2,7 +2,6 @@ from typing import Annotated, Any, Dict, List, Optional
 
 import jwt
 from fastapi import FastAPI, HTTPException, Security, security, status
-from pydantic import Field
 from pydantic_settings import BaseSettings
 
 
