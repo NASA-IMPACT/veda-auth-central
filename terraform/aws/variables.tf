@@ -63,8 +63,8 @@ variable "tags" {
   }
 }
 
-variable "alb_certificate_arn" {
-  description = "ACM certificate used by ALB"
+variable "keycloak_alb_certificate_arn" {
+  description = "ACM certificate used by Keycloak ALB"
   type        = string
 }
 
@@ -171,7 +171,7 @@ variable "encryption_configuration" {
     kms_key         = any
   })
   description = "ECR encryption configuration"
-  default = {
+  default     = {
     encryption_type = "AES256"
     kms_key         = null
   }
@@ -244,8 +244,59 @@ variable "stickiness" {
     enabled         = bool
   })
   description = "Target group sticky configuration"
-  default = {
+  default     = {
     cookie_duration = null
     enabled         = false
   }
+}
+
+variable "vault_alb_certificate_arn" {
+  description = "ACM certificate used by Vault ALB"
+  type        = string
+}
+
+variable "vault_container_port" {
+  description = "Vault port"
+  type        = number
+  default     = 8200
+}
+
+variable "vault_ami" {
+  description = "AMI used for Vault"
+  type        = string
+}
+
+variable "ec2_ssh_key_name" {
+  description = "key pair to use for SSH access to instance"
+  type        = string
+}
+
+variable "vault_instance_type" {
+  type        = string
+  description = "EC2 instance type"
+}
+
+variable "vault_version" {
+  type        = string
+  description = "Vault version"
+}
+
+variable "vault_leader_tls_servername" {
+  type        = string
+  description = "One of the shared DNS SAN used to create the certs use for mTLS"
+}
+
+variable "vault_secrets_manager_arn" {
+  type        = string
+  description = "Secrets manager ARN"
+}
+
+variable "vault_min_nodes" {
+  type        = number
+  description = "Minimum number of Vault nodes to deploy in ASG"
+}
+
+variable "vault_max_nodes" {
+  type        = number
+  description = "Minimum number of Vault nodes to deploy in ASG"
 }
