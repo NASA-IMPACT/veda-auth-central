@@ -45,7 +45,7 @@ locals {
 
 module "keycloak" {
   source                             = "./modules/keycloak"
-  alb_certificate_arn                = var.alb_certificate_arn
+  alb_certificate_arn                = var.keycloak_alb_certificate_arn
   alb_destroy_log_bucket             = var.alb_destroy_log_bucket
   container_cpu_units                = var.container_cpu_units
   container_memory_limit             = var.container_memory_limit
@@ -86,4 +86,30 @@ module "keycloak" {
   stickiness                         = var.stickiness
   tags                               = var.tags
   vpc_id                             = local.vpc_id
+}
+
+module "vault" {
+  source                    = "./modules/vault"
+  environment               = var.environment
+  region                    = var.region
+  instance_type             = var.vault_instance_type
+  vault_version             = var.vault_version
+  tags                      = var.tags
+  namespace                 = var.namespace
+  vpc_id                    = local.vpc_id
+  alb_destroy_log_bucket    = var.alb_destroy_log_bucket
+  alb_certificate_arn       = var.vault_alb_certificate_arn
+  deletion_protection       = var.deletion_protection
+  http_ingress_cidr_blocks  = var.http_ingress_cidr_blocks
+  http_redirect             = var.http_redirect
+  https_ingress_cidr_blocks = var.https_ingress_cidr_blocks
+  private_subnet_ids        = local.private_subnet_ids
+  container_port            = var.vault_container_port
+  stickiness                = var.stickiness
+  ubuntu_ami                = var.vault_ami
+  ssh_key_name              = var.ec2_ssh_key_name
+  leader_tls_servername     = var.vault_leader_tls_servername
+  secrets_manager_arn       = var.vault_secrets_manager_arn
+  min_nodes                 = var.vault_min_nodes
+  max_nodes                 = var.vault_max_nodes
 }
