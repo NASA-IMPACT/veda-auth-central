@@ -1,0 +1,30 @@
+version: "3.8"
+
+services:
+  keycloak:
+    image: quay.io/keycloak/keycloak:24.0.2
+    command: start-dev --import-realm
+    environment:
+      - KEYCLOAK_ADMIN=admin
+      - KEYCLOAK_ADMIN_PASSWORD=admin
+    volumes:
+      - ./keycloak:/opt/keycloak/data/import
+    ports:
+      - "8080:8080"
+    restart: unless-stopped
+
+  api:
+    build: ./api
+    command: uvicorn main:app --host 0.0.0.0 --reload
+    volumes:
+      - ./api:/app
+    ports:
+      - "8000:8000"
+    depends_on:
+      - keycloak
+    environment:
+      - KEYCLOAK_URL=http://localhost:8080
+      - KEYCLOAK_INTERNAL_URL=http://keycloak:8080
+      - KEYCLOAK_REALM=demo
+      - KEYCLOAK_CLIENT_ID=example-api
+    restart: unless-stopped

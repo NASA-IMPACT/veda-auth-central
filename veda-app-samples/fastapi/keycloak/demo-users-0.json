@@ -1,0 +1,50 @@
+{
+  "realm" : "demo",
+  "users" : [ {
+    "id" : "d7dd8cf2-b59f-48a2-97c7-6e2ef91d1655",
+    "username" : "alice",
+    "firstName" : "Alice",
+    "lastName" : "Alice",
+    "email" : "alice@example.com",
+    "emailVerified" : true,
+    "createdTimestamp" : 1712175954179,
+    "enabled" : true,
+    "totp" : false,
+    "credentials" : [ {
+      "id" : "a0e92d2c-425c-4537-b4b5-ed24bede1969",
+      "type" : "password",
+      "userLabel" : "My password",
+      "createdDate" : 1712175975972,
+      "secretData" : "{\"value\":\"sPsuUMFQoxtIE8kS2NtHr33dO1y9tqN6IsBH7NHIY6cRIt6FApx+fX5Rj3B3VXecBJGJ0gydXdnNXPmQ5SAZAw==\",\"salt\":\"lVJaXk77SpXU3xvnBXptDg==\",\"additionalParameters\":{}}",
+      "credentialData" : "{\"hashIterations\":210000,\"algorithm\":\"pbkdf2-sha512\",\"additionalParameters\":{}}"
+    } ],
+    "disableableCredentialTypes" : [ ],
+    "requiredActions" : [ ],
+    "realmRoles" : [ "default-roles-demo" ],
+    "notBefore" : 0,
+    "groups" : [ "/Admin" ]
+  }, {
+    "id" : "44a67c7f-722e-4b2d-8e1e-d81d5a6b5f06",
+    "username" : "bob",
+    "firstName" : "Bob",
+    "lastName" : "Bob",
+    "email" : "bob@example.com",
+    "emailVerified" : true,
+    "createdTimestamp" : 1712179392557,
+    "enabled" : true,
+    "totp" : false,
+    "credentials" : [ {
+      "id" : "58aaa48c-3527-4f3f-9241-10caca344660",
+      "type" : "password",
+      "userLabel" : "My password",
+      "createdDate" : 1712179422943,
+      "secretData" : "{\"value\":\"Qf/QBKrISgKQcSFoLAjgBWCEXbKz/pneuiG/6zaqashSrrwoZndbtQM+aQBAs1fPLyl7MVy3HYmKhypLah0/2w==\",\"salt\":\"clI940OajSrg5X+MeSs11g==\",\"additionalParameters\":{}}",
+      "credentialData" : "{\"hashIterations\":210000,\"algorithm\":\"pbkdf2-sha512\",\"additionalParameters\":{}}"
+    } ],
+    "disableableCredentialTypes" : [ ],
+    "requiredActions" : [ ],
+    "realmRoles" : [ "default-roles-demo" ],
+    "notBefore" : 0,
+    "groups" : [ "/Vetted User" ]
+  } ]
+}
