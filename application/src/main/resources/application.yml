@@ -1,0 +1,22 @@
+server:
+  port: 8081
+
+veda-auth:
+  region: "local"
+
+spring:
+  application:
+    name: veda-auth-central
+  datasource:
+    url: "jdbc:postgresql://localhost:15432/veda-auth"
+    username: "postgres"
+    password: "example"
+  jpa:
+    hibernate:
+      ddl-auto: validate
+
+logging:
+  pattern:
+    level: '%5p [${spring.application.name:},%X{traceId:-},%X{spanId:-}]'
+  level:
+    root: info
