@@ -57,6 +57,9 @@
         <spring.boot.version>3.2.2</spring.boot.version>
         <jul-to-slf4j.version>1.7.0</jul-to-slf4j.version>
         <flyway-db.version>8.5.13</flyway-db.version>
+        <protobuf-plugin.version>0.6.1</protobuf-plugin.version>
+        <protobuf.version>3.23.4</protobuf.version>
+        <grpc.version>1.58.0</grpc.version>
     </properties>
 
     <build>
@@ -76,8 +79,8 @@
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-compiler-plugin</artifactId>
                 <configuration>
-                    <source>21</source>
-                    <target>21</target>
+                    <source>17</source>
+                    <target>17</target>
                 </configuration>
             </plugin>
         </plugins>
