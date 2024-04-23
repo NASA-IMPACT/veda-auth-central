@@ -1,31 +1,39 @@
 version: "3.8"
 services:
-
-  db:
-    image: bitnami/postgresql:15.3.0
-    ports:
-      - "15432:5432"
+  keycloak:
+    image: quay.io/keycloak/keycloak:20.0.3
     environment:
-      - POSTGRESQL_USERNAME=postgres
-      - POSTGRESQL_PASSWORD=example
-      - POSTGRES_PASSWORD=example
-      - POSTGRESQL_DATABASE=veda-auth
-      - POSTGRES_MULTIPLE_DATABASES=keycloak
+      KC_HOSTNAME: localhost
+      KC_HOSTNAME_PORT: 8080
+      KC_HOSTNAME_STRICT_BACKCHANNEL: "true"
+      KC_DB: mysql
+      KC_DB_URL: jdbc:mysql://my_sql_local:3306/keycloak?characterEncoding=UTF-8
+      KC_DB_USERNAME: admin
+      KC_DB_PASSWORD: admin
+      KEYCLOAK_ADMIN: admin
+      KEYCLOAK_ADMIN_PASSWORD: admin
+    depends_on:
+      - my_sql_local
+    ports:
+      - "8080:8080"
+    command:
+      - start-dev
+    restart: unless-stopped
+
+  my_sql_local:
+    container_name: my_sql_local
+    image: mysql:8.0.31
+    restart: always
+    command: --character-set-server=utf8 --collation-server=utf8_general_ci
+    ports:
+      - "3306:3306"
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_USER: admin
+      MYSQL_PASSWORD: admin
+      MAX_ALLOWED_PACKET: 1073741824
     volumes:
       - ./dbinit:/docker-entrypoint-initdb.d
-    healthcheck:
-      test:
-        [
-          "CMD",
-          "pg_isready",
-          "--username=postgres",
-          "--host=127.0.0.1",
-          "--port=5432"
-        ]
-      interval: 2s
-      timeout: 1m
-      retries: 5
-      start_period: 10s
 
   adminer:
     image: adminer
