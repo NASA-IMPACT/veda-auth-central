@@ -20,3 +20,26 @@ logging:
     level: '%5p [${spring.application.name:},%X{traceId:-},%X{spanId:-}]'
   level:
     root: info
+
+iam:
+  server:
+    client:
+      id: admin-cli
+    url: http://host:docker:internal:8080
+    admin:
+      username: admin
+      password: admin
+    super:
+      admin:
+        realm:
+          id: master
+  federated:
+    cilogon:
+      authorization:
+        endpoint: https://cilogon.org/authorize
+      token:
+        endpoint: https://cilogon.org/oauth2/token
+        userinfo:
+          endpoint: https://cilogon.org/oauth2/userinfo
+      issuer: https://cilogon.org
+      jwksUri: https://cilogon.org/oauth2/certs
