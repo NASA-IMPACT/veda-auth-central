@@ -1,0 +1,189 @@
+/*
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements. See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership. The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License. You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied. See the License for the
+ *  specific language governing permissions and limitations
+ *  under the License.
+ */
+
+package com.veda.central.core.mapper.user;
+
+import com.veda.central.core.constants.Constants;
+import com.veda.central.core.model.user.Group;
+import com.veda.central.core.model.user.GroupAttribute;
+import com.veda.central.core.model.user.GroupRole;
+import com.veda.central.core.model.user.GroupToGroupMembership;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+
+/**
+ * This class maps persistence data model to protobuf data model
+ */
+public class GroupMapper {
+
+    private static final Logger LOGGER = LoggerFactory.getLogger(GroupMapper.class);
+
+
+    public static Group createGroupEntity(com.veda.central.core.user.Group group, long tenantId) {
+
+        Group groupEntity = new Group();
+        String id = group.getId() + "@" + tenantId;
+
+        String parentId = group.getParentId();
+
+        if (!parentId.trim().isEmpty()) {
+            parentId = group.getParentId() + "@" + tenantId;
+        }
+
+        groupEntity.setId(id);
+        groupEntity.setExternalId(group.getId());
+        groupEntity.setName(group.getName());
+        groupEntity.setTenantId(tenantId);
+        groupEntity.setParentId(parentId);
+
+
+        group.getDescription();
+        if (!group.getDescription().trim().isEmpty()) {
+            groupEntity.setDescription(group.getDescription());
+        }
+
+        Set<GroupAttribute> groupList = new HashSet<>();
+        if (!group.getAttributesList().isEmpty()) {
+            group.getAttributesList().forEach(atr -> {
+
+                for (String value : atr.getValueList()) {
+                    GroupAttribute groupAttribute = new GroupAttribute();
+                    groupAttribute.setKeyValue(atr.getKey());
+                    groupAttribute.setValue(value);
+                    groupAttribute.setGroup(groupEntity);
+                    groupList.add(groupAttribute);
+                }
+            });
+        }
+        groupEntity.setGroupAttribute(groupList);
+
+        Set<GroupRole> groupRoles = new HashSet<>();
+
+        if (!group.getClientRolesList().isEmpty()) {
+            group.getClientRolesList().forEach(role -> {
+                GroupRole userRole = new GroupRole();
+                userRole.setValue(role);
+                userRole.setType(Constants.ROLE_TYPE_CLIENT);
+                userRole.setGroup(groupEntity);
+                groupRoles.add(userRole);
+            });
+        }
+
+
+        if (!group.getRealmRolesList().isEmpty()) {
+            group.getRealmRolesList().forEach(role -> {
+                GroupRole userRole = new GroupRole();
+                userRole.setValue(role);
+                userRole.setType(Constants.ROLE_TYPE_REALM);
+                userRole.setGroup(groupEntity);
+                groupRoles.add(userRole);
+
+            });
+        }
+
+        groupEntity.setGroupRole(groupRoles);
+        return groupEntity;
+    }
+
+
+    public static com.veda.central.core.user.Group createGroup(Group group, String ownerId) {
+
+        com.veda.central.core.user.Group.Builder groupBuilder = com.veda.central.core.user.Group
+                .newBuilder()
+                .setId(group.getExternalId())
+                .setName(group.getName())
+                .setParentId(group.getParentId())
+                .setCreatedTime(group.getCreatedAt().getTime())
+                .setLastModifiedTime(group.getLastModifiedAt().getTime())
+                .setOwnerId(ownerId);
+
+
+        if (group.getDescription() != null) {
+            groupBuilder.setDescription(group.getDescription());
+        }
+
+        List<String> clientRoles = new ArrayList<>();
+        List<String> realmRoles = new ArrayList<>();
+
+        if (group.getGroupRole() != null && !group.getGroupRole().isEmpty()) {
+
+            group.getGroupRole().forEach(role -> {
+                if (role.getType().equals(Constants.ROLE_TYPE_CLIENT)) {
+                    clientRoles.add(role.getValue());
+                } else {
+                    realmRoles.add(role.getValue());
+                }
+            });
+        }
+
+        List<com.veda.central.core.user.GroupAttribute> attributeList = new ArrayList<>();
+        Map<String, List<String>> atrMap = new HashMap<>();
+        if (group.getGroupAttribute() != null && !group.getGroupAttribute().isEmpty()) {
+
+            group.getGroupAttribute().forEach(atr -> {
+
+                if (atrMap.get(atr.getKeyValue()) == null) {
+                    atrMap.put(atr.getKeyValue(), new ArrayList<String>());
+                }
+                atrMap.get(atr.getKeyValue()).add(atr.getValue());
+
+            });
+
+            groupBuilder.addAllClientRoles(clientRoles).addAllRealmRoles(realmRoles);
+        }
+
+        atrMap.keySet().forEach(key -> {
+            com.veda.central.core.user.GroupAttribute attribute = com.veda.central.core.user.GroupAttribute
+                    .newBuilder()
+                    .setKey(key)
+                    .addAllValue(atrMap.get(key))
+                    .build();
+            attributeList.add(attribute);
+        });
+
+        return groupBuilder.addAllAttributes(attributeList).build();
+    }
+
+    public static Group setParentGroupMembership(Group parent, Group child) {
+        GroupToGroupMembership groupToGroupMembership = new GroupToGroupMembership();
+        groupToGroupMembership.setChild(child);
+        groupToGroupMembership.setParent(parent);
+        groupToGroupMembership.setTenantId(child.getTenantId());
+
+        Set<GroupToGroupMembership> groupList = new HashSet<>();
+        groupList.add(groupToGroupMembership);
+        child.setParentGroups(groupList);
+        return child;
+    }
+
+    public static GroupToGroupMembership groupToGroupMembership(Group child, Group parent) {
+        GroupToGroupMembership groupToGroupMembership = new GroupToGroupMembership();
+        groupToGroupMembership.setChild(child);
+        groupToGroupMembership.setParent(parent);
+        groupToGroupMembership.setTenantId(child.getTenantId());
+        return groupToGroupMembership;
+    }
+}

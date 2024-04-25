@@ -26,4 +26,7 @@ public final class Constants {
     public static final String OWNER_ID = "ownerId";
     public static final String DESCRIPTION = "description";
 
+    public static final String ROLE_TYPE_REALM = "realm";
+    public static final  String ROLE_TYPE_CLIENT = "client";
+
 }
