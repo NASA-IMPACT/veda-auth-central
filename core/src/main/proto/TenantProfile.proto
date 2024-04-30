@@ -21,7 +21,8 @@
 syntax = "proto3";
 
 option java_multiple_files = true;
-package com.veda.central.core.tenant;
+package com.veda.central.core.tenant.profile.api;
+
 
 message Tenant {
   int64 tenant_id = 1;
@@ -81,4 +82,81 @@ message TenantStatusUpdateMetadata {
   TenantStatus updated_status = 1;
   string updated_by = 2;
   string updated_at = 3;
+}
+
+
+message AddTenantResponse {
+  int64 tenant_id = 1;
+}
+
+
+message UpdateTenantResponse {
+  Tenant tenant = 1;
+
+}
+
+message GetTenantRequest {
+  int64 tenant_id = 1;
+}
+
+message GetTenantResponse {
+  Tenant tenant = 1;
+}
+
+
+message GetAllTenantsResponse {
+  repeated Tenant tenant = 1;
+  int32 total_num_of_tenants =2;
+}
+
+message IsTenantExistRequest {
+  int64 tenant_id = 1;
+}
+
+message IsTenantExistResponse {
+  bool is_exist = 1;
+}
+
+message GetAllTenantsForUserRequest {
+  string requester_email = 1;
+}
+
+message GetAllTenantsForUserResponse {
+  repeated Tenant tenant = 1;
+}
+
+message UpdateStatusRequest {
+  string client_id = 1;
+  TenantStatus status = 2;
+  string updated_by = 3;
+  int64 tenant_id = 4;
+  bool super_tenant = 5;
+  string access_token = 6;
+}
+
+message UpdateStatusResponse {
+  int64 tenant_id = 1;
+  TenantStatus status = 2;
+}
+
+message GetAuditTrailRequest {
+  int64 tenant_id = 1;
+}
+
+message GetStatusUpdateAuditTrailResponse {
+  repeated TenantStatusUpdateMetadata metadata = 1;
+}
+
+message GetAttributeUpdateAuditTrailResponse {
+  repeated TenantAttributeUpdateMetadata metadata = 2;
+}
+
+message GetTenantsRequest {
+  int32 offset = 1;
+  int32 limit = 2;
+  int64 parent_id = 3;
+  TenantStatus status = 4;
+  string requester_email = 5;
+  string parent_client_id = 6;
+  TenantType type= 7;
 }

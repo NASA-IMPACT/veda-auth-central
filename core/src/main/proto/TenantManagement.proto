@@ -21,7 +21,7 @@
 syntax = "proto3";
 
 option java_multiple_files = true;
-package com.veda.central.core.tenant.api;
+package com.veda.central.core.tenant.management.api;
 
 import "TenantProfile.proto";
 
@@ -68,7 +68,7 @@ message GetTenantResponse {
 message GetTenantRequest {
   string client_id = 1;
   int64 tenant_id = 2;
-  com.veda.central.core.tenant.Tenant tenant = 4;
+  com.veda.central.core.tenant.profile.api.Tenant tenant = 4;
   Credentials credentials = 5;
 }
 
@@ -88,14 +88,14 @@ message UpdateTenantRequest {
   string client_id = 1;
   int64 tenant_id = 2;
   Credentials credentials = 3;
-  com.veda.central.core.tenant.Tenant body = 4;
+  com.veda.central.core.tenant.profile.api.Tenant body = 4;
 }
 
 message DeleteTenantRequest {
   string client_id = 1;
   int64 tenant_id = 2;
   Credentials credentials = 3;
-  com.veda.central.core.tenant.Tenant body = 4;
+  com.veda.central.core.tenant.profile.api.Tenant body = 4;
 }
 
 message GetCredentialsRequest {

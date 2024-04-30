@@ -29,5 +29,5 @@ import java.util.List;
 public interface UserAttributeRepository extends JpaRepository<UserAttribute, Long> {
 
     @Query("SELECT DISTINCT atr.userProfile from UserAttribute atr where atr.keyValue = ?1 and atr.value =?2")
-    public List<UserProfile> findFilteredUserProfiles(String key, String value);
+    List<UserProfile> findFilteredUserProfiles(String key, String value);
 }

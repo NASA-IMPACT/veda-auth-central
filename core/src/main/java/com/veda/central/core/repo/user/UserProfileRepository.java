@@ -21,6 +21,15 @@ package com.veda.central.core.repo.user;
 
 import com.veda.central.core.model.user.UserProfile;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
+
+import java.util.List;
 
 public interface UserProfileRepository extends JpaRepository<UserProfile, String> {
+
+    List<UserProfile> findByTenantId(long tenantId);
+
+    @Query(value = "SELECT * FROM user_profile t WHERE t.tenant_id LIKE ?1 ORDER BY t.id limit ?2 OFFSET ?3", nativeQuery = true)
+    List<UserProfile> findByTenantIdWithPagination(long tenantId, long limit, long offset);
+
 }

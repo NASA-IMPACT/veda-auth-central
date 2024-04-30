@@ -22,5 +22,11 @@ package com.veda.central.core.repo.user;
 import com.veda.central.core.model.user.Group;
 import org.springframework.data.jpa.repository.JpaRepository;
 
-public interface GroupRepository extends JpaRepository<Group, String> {
+import java.util.List;
+
+public interface GroupRepository extends JpaRepository<Group, String>, SearchGroupsRepository {
+
+    List<Group> findByParentId(String s);
+
+    List<Group> findAllByTenantId(long tenantId);
 }

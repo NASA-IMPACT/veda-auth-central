@@ -42,7 +42,7 @@ public class GroupMapper {
     private static final Logger LOGGER = LoggerFactory.getLogger(GroupMapper.class);
 
 
-    public static Group createGroupEntity(com.veda.central.core.user.Group group, long tenantId) {
+    public static Group createGroupEntity(com.veda.central.core.user.profile.api.Group group, long tenantId) {
 
         Group groupEntity = new Group();
         String id = group.getId() + "@" + tenantId;
@@ -109,9 +109,9 @@ public class GroupMapper {
     }
 
 
-    public static com.veda.central.core.user.Group createGroup(Group group, String ownerId) {
+    public static com.veda.central.core.user.profile.api.Group createGroup(Group group, String ownerId) {
 
-        com.veda.central.core.user.Group.Builder groupBuilder = com.veda.central.core.user.Group
+        com.veda.central.core.user.profile.api.Group.Builder groupBuilder = com.veda.central.core.user.profile.api.Group
                 .newBuilder()
                 .setId(group.getExternalId())
                 .setName(group.getName())
@@ -139,24 +139,20 @@ public class GroupMapper {
             });
         }
 
-        List<com.veda.central.core.user.GroupAttribute> attributeList = new ArrayList<>();
+        List<com.veda.central.core.user.profile.api.GroupAttribute> attributeList = new ArrayList<>();
         Map<String, List<String>> atrMap = new HashMap<>();
         if (group.getGroupAttribute() != null && !group.getGroupAttribute().isEmpty()) {
 
             group.getGroupAttribute().forEach(atr -> {
-
-                if (atrMap.get(atr.getKeyValue()) == null) {
-                    atrMap.put(atr.getKeyValue(), new ArrayList<String>());
-                }
+                atrMap.computeIfAbsent(atr.getKeyValue(), k -> new ArrayList<>());
                 atrMap.get(atr.getKeyValue()).add(atr.getValue());
-
             });
 
             groupBuilder.addAllClientRoles(clientRoles).addAllRealmRoles(realmRoles);
         }
 
         atrMap.keySet().forEach(key -> {
-            com.veda.central.core.user.GroupAttribute attribute = com.veda.central.core.user.GroupAttribute
+            com.veda.central.core.user.profile.api.GroupAttribute attribute = com.veda.central.core.user.profile.api.GroupAttribute
                     .newBuilder()
                     .setKey(key)
                     .addAllValue(atrMap.get(key))

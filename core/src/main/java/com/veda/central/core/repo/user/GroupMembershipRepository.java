@@ -22,5 +22,17 @@ package com.veda.central.core.repo.user;
 import com.veda.central.core.model.user.UserGroupMembership;
 import org.springframework.data.jpa.repository.JpaRepository;
 
+import java.util.List;
+
 public interface GroupMembershipRepository extends JpaRepository<UserGroupMembership, String> {
+
+    List<UserGroupMembership> findAllByGroupId(String id);
+
+    List<UserGroupMembership> findAllByUserProfileId(String id);
+
+    List<UserGroupMembership> findAllByGroupIdAndUserProfileId(String groupEntityId, String userProfileId);
+
+    List<UserGroupMembership> findAllByGroupIdAndUserProfileIdAndUserGroupMembershipTypeId(String groupId, String userProfileId, String groupMembershipId);
+
+    List<UserGroupMembership> findAllByGroupIdAndUserGroupMembershipTypeId(String id, String groupMembershipId);
 }

@@ -19,12 +19,12 @@
 
 package com.veda.central.core.repo.user;
 
-import com.veda.central.core.model.user.GroupToGroupMembership;
-import org.springframework.data.jpa.repository.JpaRepository;
+
+import com.veda.central.core.model.user.Group;
 
 import java.util.List;
 
-public interface GroupToGroupMembershipRepository extends JpaRepository<GroupToGroupMembership, String> {
+public interface SearchGroupsRepository {
 
-    List<GroupToGroupMembership> findAllByChildId(String childId);
+    List<Group> searchEntities(long tenantId, com.veda.central.core.user.profile.api.Group group, int offset, int limit);
 }

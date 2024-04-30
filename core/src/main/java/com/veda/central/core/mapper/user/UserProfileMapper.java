@@ -23,10 +23,8 @@ import com.veda.central.core.constants.Constants;
 import com.veda.central.core.model.user.UserAttribute;
 import com.veda.central.core.model.user.UserProfile;
 import com.veda.central.core.model.user.UserRole;
-import com.veda.central.core.user.UserStatus;
-import com.veda.central.core.user.UserTypes;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import com.veda.central.core.user.profile.api.UserStatus;
+import com.veda.central.core.user.profile.api.UserTypes;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -46,7 +44,7 @@ public class UserProfileMapper {
      * @param userProfile the UserProfile object to be converted
      * @return the created UserProfile entity
      */
-    public static UserProfile createUserProfileEntityFromUserProfile(com.veda.central.core.user.UserProfile userProfile) {
+    public static UserProfile createUserProfileEntityFromUserProfile(com.veda.central.core.user.profile.api.UserProfile userProfile) {
 
         UserProfile entity = new UserProfile();
 
@@ -117,12 +115,12 @@ public class UserProfileMapper {
     /**
      * Creates a protobuf UserProfile object from a UserProfileEntity object.
      *
-     * @param profileEntity The UserProfileEntity object to be converted.
+     * @param profileEntity  The UserProfileEntity object to be converted.
      * @param membershipType The membership type of the user.
      * @return The created UserProfile object.
      */
-    public static com.veda.central.core.user.UserProfile createUserProfileFromUserProfileEntity(UserProfile profileEntity, String membershipType) {
-        com.veda.central.core.user.UserProfile.Builder builder = com.veda.central.core.user.UserProfile.newBuilder();
+    public static com.veda.central.core.user.profile.api.UserProfile createUserProfileFromUserProfileEntity(UserProfile profileEntity, String membershipType) {
+        com.veda.central.core.user.profile.api.UserProfile.Builder builder = com.veda.central.core.user.profile.api.UserProfile.newBuilder();
 
         if (profileEntity.getUserRole() != null && !profileEntity.getUserRole().isEmpty()) {
 
@@ -135,7 +133,7 @@ public class UserProfileMapper {
             });
         }
 
-        List<com.veda.central.core.user.UserAttribute> attributeList = new ArrayList<>();
+        List<com.veda.central.core.user.profile.api.UserAttribute> attributeList = new ArrayList<>();
         if (profileEntity.getUserAttribute() != null && !profileEntity.getUserAttribute().isEmpty()) {
 
             Map<String, List<String>> atrMap = new HashMap<>();
@@ -145,7 +143,7 @@ public class UserProfileMapper {
             });
 
             atrMap.keySet().forEach(key -> {
-                com.veda.central.core.user.UserAttribute attribute = com.veda.central.core.user.UserAttribute
+                com.veda.central.core.user.profile.api.UserAttribute attribute = com.veda.central.core.user.profile.api.UserAttribute
                         .newBuilder()
                         .setKey(key)
                         .addAllValues(atrMap.get(key))
@@ -186,7 +184,7 @@ public class UserProfileMapper {
         return builder.build();
     }
 
-    public static String getUserInfoInfoAsString(com.veda.central.core.user.UserProfile userProfile) {
+    public static String getUserInfoInfoAsString(com.veda.central.core.user.profile.api.UserProfile userProfile) {
         return "username : " + userProfile.getUsername() +
                 "\n" +
                 "emailAddress : " + userProfile.getEmail() +

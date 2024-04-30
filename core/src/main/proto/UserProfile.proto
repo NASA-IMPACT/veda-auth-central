@@ -21,7 +21,8 @@
 syntax = "proto3";
 
 option java_multiple_files = true;
-package com.veda.central.core.user;
+package com.veda.central.core.user.profile.api;
+
 
 enum UserStatus {
   ACTIVE = 0;
@@ -66,10 +67,28 @@ message UserProfile {
   string membership_type = 12;
 }
 
+message UserProfileRequest {
+  int64 tenantId = 1;
+  UserProfile profile = 2;
+  string performed_by = 3;
+  string client_id = 4;
+  int32 offset=5;
+  int32 limit=6;
+}
+
 message UserAttribute {
   int64 id = 1;
   string key = 2;
   repeated string values = 3;
+}
+
+message GetAllUserProfilesResponse {
+  repeated UserProfile profiles = 1;
+}
+
+message GetUpdateAuditTrailRequest {
+  int64 tenantId = 1;
+  string username = 2;
 }
 
 message UserProfileAttributeUpdateMetadata {
@@ -83,6 +102,27 @@ message UserProfileStatusUpdateMetadata {
   UserStatus updated_status = 1;
   string updated_by = 2;
   string updated_at = 3;
+}
+
+message GetUpdateAuditTrailResponse {
+  repeated UserProfileAttributeUpdateMetadata attribute_audit = 1;
+  repeated UserProfileStatusUpdateMetadata status_audit = 2;
+}
+
+message GroupRequest {
+  int64 tenant_id = 1;
+  Group group = 2;
+  string performed_by = 3;
+  string client_id = 4;
+  string membership_type = 5;
+  string id = 6;
+  string client_sec =7;
+  int32 offset =8;
+  int32 limit=9;
+}
+
+message GetAllGroupsResponse {
+  repeated Group groups = 1;
 }
 
 message Group {
@@ -118,4 +158,14 @@ message GroupToGroupMembership {
   string parent_id = 2;
   string child_id = 3;
   string client_id = 4;
+}
+
+message Status {
+  bool status = 1;
+}
+
+message UserGroupMembershipTypeRequest {
+  string type = 1;
+  int64 tenant_id = 2;
+  string client_id = 3;
 }

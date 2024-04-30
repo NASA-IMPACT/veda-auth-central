@@ -21,7 +21,7 @@ package com.veda.central.core.mapper.user;
 
 import com.veda.central.core.model.user.AttributeUpdateMetadata;
 import com.veda.central.core.model.user.UserProfile;
-import com.veda.central.core.user.UserProfileAttributeUpdateMetadata;
+import com.veda.central.core.user.profile.api.UserProfileAttributeUpdateMetadata;
 
 import java.util.HashSet;
 import java.util.Objects;
