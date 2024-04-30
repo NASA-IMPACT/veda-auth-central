@@ -3,6 +3,11 @@ server:
 
 veda-auth:
   region: "local"
+  identity:
+    auth:
+      cache:
+        enabled: false
+        size: 1024
 
 spring:
   application:

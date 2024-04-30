@@ -29,4 +29,9 @@ public final class Constants {
     public static final String ROLE_TYPE_REALM = "realm";
     public static final  String ROLE_TYPE_CLIENT = "client";
 
+
+    public static final String PASSWORD_GRANT_TYPE = "password";
+    public static final String CLIENT_CREDENTIALS = "client_credentials";
+    public static final String REFRESH_TOKEN = "refresh_token";
+
 }
