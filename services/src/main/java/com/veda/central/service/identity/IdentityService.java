@@ -110,14 +110,14 @@ public class IdentityService {
     public com.veda.central.core.identity.api.User getUser(AuthToken request) {
         String username = null;
         String tenantId = null;
-        String custosId = null;
+        String vedaId = null;
         try {
 
             for (Claim claim : request.getClaimsList()) {
                 switch (claim.getKey()) {
                     case "username" -> username = claim.getValue();
                     case "tenantId" -> tenantId = claim.getValue();
-                    case "clientId" -> custosId = claim.getValue();
+                    case "clientId" -> vedaId = claim.getValue();
                 }
             }
 
@@ -131,7 +131,7 @@ public class IdentityService {
                     .setFullName(user.getFullName())
                     .setSub(user.getSub())
                     .setUsername(user.getUsername())
-                    .setClientId(custosId != null ? custosId : "")
+                    .setClientId(vedaId != null ? vedaId : "")
                     .build();
 
         } catch (Exception ex) {
