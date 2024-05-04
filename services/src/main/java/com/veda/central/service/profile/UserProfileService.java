@@ -49,10 +49,12 @@ import com.veda.central.core.user.profile.api.GetUpdateAuditTrailResponse;
 import com.veda.central.core.user.profile.api.GroupMembership;
 import com.veda.central.core.user.profile.api.GroupRequest;
 import com.veda.central.core.user.profile.api.Status;
+import com.veda.central.core.user.profile.api.UserAttribute;
 import com.veda.central.core.user.profile.api.UserGroupMembershipTypeRequest;
 import com.veda.central.core.user.profile.api.UserProfileAttributeUpdateMetadata;
 import com.veda.central.core.user.profile.api.UserProfileRequest;
 import com.veda.central.core.user.profile.api.UserProfileStatusUpdateMetadata;
+import com.veda.central.service.exceptions.InternalServerException;
 import jakarta.persistence.EntityNotFoundException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -199,7 +201,7 @@ public class UserProfileService {
         }
     }
 
-    public void deleteUserProfile(UserProfileRequest request) {
+    public com.veda.central.core.user.profile.api.UserProfile deleteUserProfile(UserProfileRequest request) {
         try {
             LOGGER.debug("Request received to deleteUserProfile for " + request.getProfile().getUsername() + "at " + request.getTenantId());
             long tenantId = request.getTenantId();
@@ -209,9 +211,11 @@ public class UserProfileService {
             String userId = username + "@" + tenantId;
 
             Optional<UserProfile> profileEntity = repository.findById(userId);
-
             if (profileEntity.isPresent()) {
-                repository.delete(profileEntity.get());
+                UserProfile entity = profileEntity.get();
+                com.veda.central.core.user.profile.api.UserProfile profile = UserProfileMapper.createUserProfileFromUserProfileEntity(entity, null);
+                repository.delete(entity);
+                return profile;
 
             } else {
                 throw new EntityNotFoundException("Could not find the UserProfile with the id: " + userId);
@@ -256,6 +260,58 @@ public class UserProfileService {
             String msg = "Error occurred while fetching  user profile for tenant " + request.getTenantId();
             LOGGER.error(msg, ex);
             throw new RuntimeException(msg, ex);
+        }
+    }
+
+    public GetAllUserProfilesResponse findUserProfilesByAttributes(UserProfileRequest request) {
+        try {
+            LOGGER.debug("Request received to findUserProfilesByAttributes at " + request.getTenantId());
+
+            List<UserAttribute> attributeList = request.getProfile().getAttributesList();
+            List<UserProfile> selectedProfiles = new ArrayList<>();
+            List<com.veda.central.core.user.profile.api.UserProfile> userProfileList = new ArrayList<>();
+
+            attributeList.forEach(atr -> {
+                List<String> values = atr.getValuesList();
+                values.forEach(val -> {
+                    List<UserProfile> userAttributes = userAttributeRepository.findFilteredUserProfiles(atr.getKey(), val);
+                    if (userAttributes == null || userAttributes.isEmpty()) {
+                        return;
+                    }
+
+                    if (selectedProfiles.isEmpty()) {
+                        selectedProfiles.addAll(userAttributes);
+                    } else {
+                        List<UserProfile> profiles = userAttributes.stream().filter(newProf -> {
+                            AtomicBoolean matched = new AtomicBoolean(false);
+                            selectedProfiles.forEach(selectedProfile -> {
+                                if (selectedProfile.getId().equals(newProf.getId())) {
+                                    matched.set(true);
+                                }
+                            });
+                            return matched.get();
+                        }).toList();
+                        selectedProfiles.clear();
+                        selectedProfiles.addAll(profiles);
+                    }
+                });
+            });
+
+            if (!selectedProfiles.isEmpty()) {
+                selectedProfiles.forEach(userProfile -> {
+                    com.veda.central.core.user.profile.api.UserProfile prof = UserProfileMapper.createUserProfileFromUserProfileEntity(userProfile, null);
+                    userProfileList.add(prof);
+                });
+                return GetAllUserProfilesResponse.newBuilder().addAllProfiles(userProfileList).build();
+
+            } else {
+                return GetAllUserProfilesResponse.newBuilder().build();
+            }
+
+        } catch (Exception ex) {
+            String msg = "Error occurred while fetching user profile for " + request.getProfile().getUsername() + "at " + request.getTenantId();
+            LOGGER.error(msg);
+            throw new InternalServerException(msg, ex);
         }
     }
 
