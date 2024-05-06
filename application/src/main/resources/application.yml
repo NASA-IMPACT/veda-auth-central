@@ -48,3 +48,12 @@ iam:
           endpoint: https://cilogon.org/oauth2/userinfo
       issuer: https://cilogon.org
       jwksUri: https://cilogon.org/oauth2/certs
+
+ciLogon:
+  admin:
+    client:
+      secret: 1234
+    auth:
+      endpoint: https://test.cilogon.org/oauth2/oidc-cm
+  institutions:
+    endpoint: https://cilogon.org/idplist/
