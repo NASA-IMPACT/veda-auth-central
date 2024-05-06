@@ -39,6 +39,11 @@
                 <artifactId>commons-lang3</artifactId>
                 <version>${apache.commons.lang3.version}</version>
             </dependency>
+            <dependency>
+                <groupId>org.springframework.vault</groupId>
+                <artifactId>spring-vault-core</artifactId>
+                <version>${spring.vault.version}</version>
+            </dependency>
         </dependencies>
     </dependencyManagement>
 
@@ -48,6 +53,7 @@
         <maven.compiler.target>17</maven.compiler.target>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <spring.boot.version>3.2.2</spring.boot.version>
+        <spring.vault.version>3.0.2</spring.vault.version>
         <jul-to-slf4j.version>1.7.0</jul-to-slf4j.version>
         <flyway-db.version>8.5.13</flyway-db.version>
         <protobuf-plugin.version>0.6.1</protobuf-plugin.version>
