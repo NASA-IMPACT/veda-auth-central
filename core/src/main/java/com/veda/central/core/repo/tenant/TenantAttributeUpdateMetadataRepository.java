@@ -22,5 +22,9 @@ package com.veda.central.core.repo.tenant;
 import com.veda.central.core.model.tenant.TenantAttributeUpdateMetadata;
 import org.springframework.data.jpa.repository.JpaRepository;
 
+import java.util.List;
+
 public interface TenantAttributeUpdateMetadataRepository extends JpaRepository<TenantAttributeUpdateMetadata, Long> {
+
+    List<TenantAttributeUpdateMetadata> findAllByTenantId(Long tenant);
 }

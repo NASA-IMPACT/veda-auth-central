@@ -24,4 +24,7 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.transaction.annotation.Transactional;
 
 public interface ContactRepository extends JpaRepository<Contact, Long> {
+
+    @Transactional
+    void deleteAllByTenantId(Long tenantId);
 }

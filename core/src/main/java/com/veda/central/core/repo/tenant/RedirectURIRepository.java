@@ -21,6 +21,10 @@ package com.veda.central.core.repo.tenant;
 
 import com.veda.central.core.model.tenant.RedirectURI;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.transaction.annotation.Transactional;
 
 public interface RedirectURIRepository extends JpaRepository<RedirectURI, Long> {
+
+    @Transactional
+    void deleteAllByTenantId(Long tenantId);
 }
