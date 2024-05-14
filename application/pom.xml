@@ -30,6 +30,11 @@
             <groupId>org.slf4j</groupId>
             <artifactId>jul-to-slf4j</artifactId>
         </dependency>
+        <dependency>
+            <groupId>com.veda</groupId>
+            <artifactId>veda-auth-services</artifactId>
+            <version>${project.version}</version>
+        </dependency>
     </dependencies>
 
     <build>
