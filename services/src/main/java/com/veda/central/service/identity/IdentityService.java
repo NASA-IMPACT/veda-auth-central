@@ -20,15 +20,7 @@
 package com.veda.central.service.identity;
 
 
-import com.google.protobuf.Struct;
 import com.veda.central.core.constants.Constants;
-import com.veda.central.core.identity.authzcache.AuthzCacheEntry;
-import com.veda.central.core.identity.authzcache.AuthzCacheIndex;
-import com.veda.central.core.identity.authzcache.AuthzCachedStatus;
-import com.veda.central.core.identity.authzcache.DefaultAuthzCacheManager;
-import com.veda.central.core.identity.exceptions.AuthSecurityException;
-import com.veda.central.service.federated.client.keycloak.auth.KeycloakAuthClient;
-import io.grpc.stub.StreamObserver;
 import com.veda.central.core.identity.api.AuthToken;
 import com.veda.central.core.identity.api.AuthenticationRequest;
 import com.veda.central.core.identity.api.AuthorizationResponse;
@@ -43,6 +35,12 @@ import com.veda.central.core.identity.api.IsAuthenticatedResponse;
 import com.veda.central.core.identity.api.OIDCConfiguration;
 import com.veda.central.core.identity.api.OperationStatus;
 import com.veda.central.core.identity.api.TokenResponse;
+import com.veda.central.core.identity.authzcache.AuthzCacheEntry;
+import com.veda.central.core.identity.authzcache.AuthzCacheIndex;
+import com.veda.central.core.identity.authzcache.AuthzCachedStatus;
+import com.veda.central.core.identity.authzcache.DefaultAuthzCacheManager;
+import com.veda.central.core.identity.exceptions.AuthSecurityException;
+import com.veda.central.service.federated.client.keycloak.auth.KeycloakAuthClient;
 import org.apache.http.HttpStatus;
 import org.json.JSONArray;
 import org.json.JSONObject;
@@ -283,7 +281,7 @@ public class IdentityService {
         }
     }
 
-    public OIDCConfiguration getOIDCConfiguration(GetOIDCConfiguration request, StreamObserver<Struct> responseObserver) {
+    public OIDCConfiguration getOIDCConfiguration(GetOIDCConfiguration request) {
         try {
             LOGGER.debug("Request for fetch OIDC configuration " + request.getTenantId());
 
