@@ -44,6 +44,16 @@
                 <artifactId>spring-vault-core</artifactId>
                 <version>${spring.vault.version}</version>
             </dependency>
+            <dependency>
+                <groupId>mysql</groupId>
+                <artifactId>mysql-connector-java</artifactId>
+                <version>${mysql.connector.java}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.springframework.cloud</groupId>
+                <artifactId>spring-cloud-starter-vault-config</artifactId>
+                <version>${spring.cloud.vault.version}</version>
+            </dependency>
         </dependencies>
     </dependencyManagement>
 
@@ -63,6 +73,8 @@
         <json.version>20240303</json.version>
         <javax.version>2.0.1.Final</javax.version>
         <apache.commons.lang3.version>3.14.0</apache.commons.lang3.version>
+        <mysql.connector.java>8.0.31</mysql.connector.java>
+        <spring.cloud.vault.version>4.0.1</spring.cloud.vault.version>
     </properties>
 
     <build>

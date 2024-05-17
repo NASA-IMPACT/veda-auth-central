@@ -13,12 +13,27 @@ spring:
   application:
     name: veda-auth-central
   datasource:
-    url: "jdbc:postgresql://localhost:15432/veda-auth"
-    username: "postgres"
-    password: "example"
+    url: "jdbc:mysql://localhost:3306/veda_auth_central"
+    username: admin
+    password: admin
+    driver-class-name: com.mysql.cj.jdbc.Driver
   jpa:
     hibernate:
-      ddl-auto: validate
+      ddl-auto: update
+    show-sql: false
+    database-platform: org.hibernate.dialect.MySQL8Dialect
+  cloud:
+    vault:
+      token: 00000000-0000-0000-0000-000000000000
+      scheme: http
+      kv:
+        enabled: true
+      host: localhost
+      port: 8200
+      uri: http://localhost:8201
+      authentication: token
+      connection-timeout: 5000
+      read-timeout: 15000
 
 logging:
   pattern:
@@ -52,6 +67,7 @@ iam:
 ciLogon:
   admin:
     client:
+      id: abc
       secret: 1234
     auth:
       endpoint: https://test.cilogon.org/oauth2/oidc-cm
