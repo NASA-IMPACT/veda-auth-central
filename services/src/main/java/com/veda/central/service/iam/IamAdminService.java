@@ -81,6 +81,7 @@ import org.keycloak.representations.idm.UserRepresentation;
 import org.keycloak.representations.idm.UserSessionRepresentation;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
@@ -99,6 +100,8 @@ public class IamAdminService {
 
     private final StatusUpdater statusUpdater;
 
+    @Value("${iam.server.url:https://auth.veda.usecustos.org/auth/}")
+    private String iamServerURL;
 
     public IamAdminService(KeycloakClient keycloakClient, StatusUpdater statusUpdater) {
         this.keycloakClient = keycloakClient;
@@ -1746,6 +1749,10 @@ public class IamAdminService {
                 throw new RuntimeException(msg, ex);
             }
         }
+    }
+
+    public String getIamServerURL() {
+        return iamServerURL;
     }
 
     private com.veda.central.core.iam.api.UserRepresentation getUser(UserRepresentation representation, String clientId) {
