@@ -50,7 +50,7 @@ iam:
   server:
     client:
       id: admin-cli
-    url: http://host:docker:internal:8080
+    url: http://localhost:8080/
     admin:
       username: admin
       password: admin

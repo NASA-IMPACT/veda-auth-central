@@ -124,7 +124,7 @@ public class CredentialStoreService {
             String path = BASE_PATH + request.getOwnerId() + "/" + request.getType().name();
             VaultResponseSupport<Credential> response = vaultTemplate.read(path, Credential.class);
 
-            if (response == null || response.getData() != null) {
+            if (response == null || response.getData() == null) {
                 String msg = "Cannot find credentials for " + request.getOwnerId() + " for type " + request.getType();
                 LOGGER.error(msg);
                 return CredentialMetadata.newBuilder().build();

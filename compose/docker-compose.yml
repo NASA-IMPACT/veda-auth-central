@@ -12,6 +12,7 @@ services:
       KC_DB_PASSWORD: admin
       KEYCLOAK_ADMIN: admin
       KEYCLOAK_ADMIN_PASSWORD: admin
+#      KC_LOG_LEVEL: DEBUG
     depends_on:
       - my_sql_local
     ports:

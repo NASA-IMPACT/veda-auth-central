@@ -877,7 +877,7 @@ public class UserManagementService {
      */
     public UserProfile deleteUserProfile(UserProfileRequest request) {
         try {
-            LOGGER.debug("Request received to deleteUserProfile " + request.getUserProfile().getUsername() + " at" + request.getTenantId());
+            LOGGER.debug("Request received to deleteUserProfile " + request.getUserProfile().getUsername() + " at " + request.getTenantId());
 
             UserSearchMetadata metadata = UserSearchMetadata.newBuilder().setUsername(request.getUserProfile().getUsername()).build();
             UserSearchRequest info = UserSearchRequest.newBuilder()
@@ -915,7 +915,7 @@ public class UserManagementService {
      */
     public UserProfile getUserProfile(UserProfileRequest request) {
         try {
-            LOGGER.debug("Request received to getUserProfile " + request.getUserProfile().getUsername() + " at" + request.getTenantId());
+            LOGGER.debug("Request received to getUserProfile " + request.getUserProfile().getUsername() + " at " + request.getTenantId());
 
             com.veda.central.core.user.profile.api.UserProfileRequest userProfileRequest = com.veda.central.core.user.profile.api.UserProfileRequest
                     .newBuilder()
@@ -941,7 +941,7 @@ public class UserManagementService {
      */
     public GetAllUserProfilesResponse getAllUserProfilesInTenant(UserProfileRequest request) {
         try {
-            LOGGER.debug("Request received to getAllUserProfilesInTenant " + request.getTenantId() + " at" + request.getTenantId());
+            LOGGER.debug("Request received to getAllUserProfilesInTenant " + request.getTenantId() + " at " + request.getTenantId());
 
             com.veda.central.core.user.profile.api.UserProfileRequest userProfileRequest = com.veda.central.core.user.profile.api.UserProfileRequest
                     .newBuilder()
@@ -971,7 +971,7 @@ public class UserManagementService {
      */
     public GetUpdateAuditTrailResponse getUserProfileAuditTrails(GetUpdateAuditTrailRequest request) {
         try {
-            LOGGER.debug("Request received to getUserProfileAuditTrails " + request.getUsername() + " at" + request.getTenantId());
+            LOGGER.debug("Request received to getUserProfileAuditTrails " + request.getUsername() + " at " + request.getTenantId());
             return userProfileService.getUserProfileAuditTrails(request);
 
         } catch (Exception ex) {
@@ -1130,7 +1130,7 @@ public class UserManagementService {
     public OperationStatus grantAdminPrivileges(UserSearchRequest request) {
         try {
 
-            LOGGER.debug("Request received to grantAdminPrivileges " + request.getUser().getUsername() + " at" + request.getTenantId());
+            LOGGER.debug("Request received to grantAdminPrivileges " + request.getUser().getUsername() + " at " + request.getTenantId());
 
             iamAdminService.grantAdminPrivilege(request);
             UserRepresentation representation = iamAdminService.getUser(request);
@@ -1177,7 +1177,7 @@ public class UserManagementService {
     public OperationStatus removeAdminPrivileges(UserSearchRequest request) {
 
         try {
-            LOGGER.debug("Request received to removeAdminPrivileges " + request.getUser().getUsername() + " at" + request.getTenantId());
+            LOGGER.debug("Request received to removeAdminPrivileges " + request.getUser().getUsername() + " at " + request.getTenantId());
 
             iamAdminService.removeAdminPrivilege(request);
             UserRepresentation representation = iamAdminService.getUser(request);

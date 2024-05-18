@@ -40,6 +40,7 @@ import com.veda.central.service.federated.cilogon.FederatedAuthenticationService
 import com.veda.central.service.iam.IamAdminService;
 import com.veda.central.service.identity.Constants;
 import com.veda.central.service.profile.TenantProfileService;
+import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
@@ -109,7 +110,7 @@ public class TenantActivationTask<T, U> extends ServiceTaskImpl<T, U> {
                         CredentialMetadata iamMetadata = credentialStoreService.getCredential(iamClientRequest);
 
                         UpdateStatusResponse response;
-                        if (iamMetadata == null || iamMetadata.getId() == null || iamMetadata.getId().equals("")) {
+                        if (iamMetadata == null || iamMetadata.getId() == null || StringUtils.isBlank(iamMetadata.getId())) {
                             response = this.activateTenant(newTenant, Constants.SYSTEM, false);
                         } else {
                             response = this.activateTenant(newTenant, Constants.SYSTEM, true);
@@ -179,7 +180,7 @@ public class TenantActivationTask<T, U> extends ServiceTaskImpl<T, U> {
 
         credentialStoreService.putCredential(credentialMetadata);
 
-        String comment = (tenant.getComment() == null || tenant.getComment().trim().equals("")) ?
+        String comment = (tenant.getComment() == null || tenant.getComment().trim().isEmpty()) ?
                 "Created by custos" : tenant.getComment();
 
 
@@ -207,19 +208,14 @@ public class TenantActivationTask<T, U> extends ServiceTaskImpl<T, U> {
                 .addAllContacts(tenant.getContactsList())
                 .setPerformedBy(performedBy);
 
-
-        CredentialMetadata creMeta = credentialStoreService.
-                getCredential(credentialRequest);
+        CredentialMetadata creMeta = credentialStoreService.getCredential(credentialRequest);
 
         clientMetadataBuilder.setClientId(creMeta.getId());
-
 
         if (!update) {
             // skip CILOGON client creation for local development
             if (!activeProfile.equalsIgnoreCase("local")) {
-                RegisterClientResponse registerClientResponse = federatedAuthentication
-                        .addClient(clientMetadataBuilder.build());
-
+                RegisterClientResponse registerClientResponse = federatedAuthentication.addClient(clientMetadataBuilder.build());
 
                 CredentialMetadata credentialMetadataCILogon = CredentialMetadata
                         .newBuilder()
@@ -230,7 +226,6 @@ public class TenantActivationTask<T, U> extends ServiceTaskImpl<T, U> {
                         .build();
 
                 credentialStoreService.putCredential(credentialMetadataCILogon);
-
 
                 ConfigureFederateIDPRequest request = ConfigureFederateIDPRequest
                         .newBuilder()

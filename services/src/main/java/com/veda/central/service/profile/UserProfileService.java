@@ -191,7 +191,7 @@ public class UserProfileService {
                 return UserProfileMapper.createUserProfileFromUserProfileEntity(profileEntity, null);
 
             } else {
-                throw new EntityNotFoundException("Could not find the UserProfile with the id: " + userId);
+                return null;
             }
 
         } catch (Exception ex) {

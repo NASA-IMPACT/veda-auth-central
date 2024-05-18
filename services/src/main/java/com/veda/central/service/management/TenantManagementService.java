@@ -33,6 +33,9 @@ import com.veda.central.core.iam.api.UserSearchMetadata;
 import com.veda.central.core.iam.api.UserSearchRequest;
 import com.veda.central.core.identity.api.AuthToken;
 import com.veda.central.core.identity.api.GetUserManagementSATokenRequest;
+import com.veda.central.core.task.ServiceCallback;
+import com.veda.central.core.task.ServiceChain;
+import com.veda.central.core.task.ServiceException;
 import com.veda.central.core.tenant.management.api.CreateTenantResponse;
 import com.veda.central.core.tenant.management.api.Credentials;
 import com.veda.central.core.tenant.management.api.DeleteTenantRequest;
@@ -41,21 +44,23 @@ import com.veda.central.core.tenant.management.api.UpdateTenantRequest;
 import com.veda.central.core.tenant.profile.api.GetTenantResponse;
 import com.veda.central.core.tenant.profile.api.Tenant;
 import com.veda.central.core.tenant.profile.api.TenantStatus;
+import com.veda.central.core.tenant.profile.api.UpdateStatusRequest;
 import com.veda.central.core.tenant.profile.api.UpdateStatusResponse;
 import com.veda.central.core.user.profile.api.UserProfile;
 import com.veda.central.core.user.profile.api.UserProfileRequest;
 import com.veda.central.service.credential.store.CredentialStoreService;
+import com.veda.central.service.exceptions.InternalServerException;
 import com.veda.central.service.federated.cilogon.FederatedAuthenticationService;
 import com.veda.central.service.iam.IamAdminService;
 import com.veda.central.service.identity.Constants;
 import com.veda.central.service.identity.IdentityService;
 import com.veda.central.service.profile.TenantProfileService;
 import com.veda.central.service.profile.UserProfileService;
+import io.grpc.Context;
 import jakarta.persistence.EntityNotFoundException;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
@@ -75,23 +80,27 @@ public class TenantManagementService {
 
     private final FederatedAuthenticationService federatedAuthenticationService;
 
-    private TenantActivationTask<UpdateStatusResponse, UpdateStatusResponse> tenantActivationTask;
+    private final TenantActivationTask<UpdateStatusResponse, UpdateStatusResponse> tenantActivationTask;
 
-    @Autowired
-    private UserProfileService userProfileService;
+    private final UserProfileService userProfileService;
 
-    @Autowired
-    private IdentityService identityService;
+    private final IdentityService identityService;
 
     @Value("${veda-auth.tenant.base.uri}")
     private String TENANT_BASE_URI;
 
 
-    public TenantManagementService(TenantProfileService tenantProfileService, CredentialStoreService credentialStoreService, IamAdminService iamAdminService, FederatedAuthenticationService federatedAuthenticationService) {
+    public TenantManagementService(TenantProfileService tenantProfileService, CredentialStoreService credentialStoreService,
+                                   IamAdminService iamAdminService, FederatedAuthenticationService federatedAuthenticationService,
+                                   TenantActivationTask<UpdateStatusResponse, UpdateStatusResponse> tenantActivationTask,
+                                   UserProfileService userProfileService, IdentityService identityService) {
         this.tenantProfileService = tenantProfileService;
         this.credentialStoreService = credentialStoreService;
         this.iamAdminService = iamAdminService;
         this.federatedAuthenticationService = federatedAuthenticationService;
+        this.tenantActivationTask = tenantActivationTask;
+        this.userProfileService = userProfileService;
+        this.identityService = identityService;
     }
 
 
@@ -355,6 +364,129 @@ public class TenantManagementService {
             String msg = "Error occurred while deleting the tenant with the Id: " + request.getTenantId();
             LOGGER.error(msg);
             throw new IllegalArgumentException(msg, ex);
+        }
+    }
+
+    public UpdateStatusResponse updateTenantStatus(UpdateStatusRequest request) {
+        try {
+
+            GetCredentialRequest credentialRequest = GetCredentialRequest.newBuilder().
+                    setId(request.getClientId())
+                    .setType(Type.VEDA)
+                    .build();
+
+            CredentialMetadata metadata = credentialStoreService.getVedaCredentialFromClientId(credentialRequest);
+
+            if (metadata != null) {
+
+                if (request.getSuperTenant()) {
+                    metadata = metadata.toBuilder().setSuperTenant(true).build();
+                    credentialStoreService.putCredential(metadata);
+                }
+
+                request = request.toBuilder().setTenantId(metadata.getOwnerId()).build();
+                UpdateStatusResponse response = tenantProfileService.updateTenantStatus(request);
+
+                if (request.getStatus().equals(TenantStatus.ACTIVE)) {
+
+                    Context ctx = Context.current().fork();
+                    // Set ctx as the current context within the Runnable
+                    UpdateStatusRequest finalRequest = request;
+                    CredentialMetadata finalMetadata = metadata;
+                    ctx.run(() -> {
+                        ServiceCallback callback = new ServiceCallback() {
+                            @Override
+                            public void onCompleted(Object obj) {
+                                com.veda.central.core.tenant.profile.api.GetTenantRequest tenantRequest = com.veda.central.core.tenant.profile.api.GetTenantRequest
+                                        .newBuilder()
+                                        .setTenantId(finalMetadata.getOwnerId())
+                                        .build();
+
+                                com.veda.central.core.tenant.profile.api.GetTenantResponse tenantResponse = tenantProfileService.getTenant(tenantRequest);
+                                Tenant savedTenant = tenantResponse.getTenant();
+
+                                GetCredentialRequest credentialRequest = GetCredentialRequest.newBuilder()
+                                        .setOwnerId(finalMetadata.getOwnerId())
+                                        .setType(Type.IAM)
+                                        .build();
+
+                                CredentialMetadata iamMeta = credentialStoreService.getCredential(credentialRequest);
+
+                                GetUserManagementSATokenRequest userManagementSATokenRequest = GetUserManagementSATokenRequest
+                                        .newBuilder()
+                                        .setClientId(iamMeta.getId())
+                                        .setClientSecret(iamMeta.getSecret())
+                                        .setTenantId(finalMetadata.getOwnerId())
+                                        .build();
+                                AuthToken token = identityService.getUserManagementServiceAccountAccessToken(userManagementSATokenRequest);
+
+                                if (token != null && StringUtils.isNotBlank(token.getAccessToken())) {
+                                    UserSearchMetadata userSearchMetadata = UserSearchMetadata.newBuilder()
+                                            .setUsername(savedTenant.getAdminUsername())
+                                            .build();
+
+                                    UserSearchRequest searchRequest = UserSearchRequest.newBuilder()
+                                            .setTenantId(savedTenant.getTenantId())
+                                            .setPerformedBy(finalRequest.getUpdatedBy())
+                                            .setAccessToken(token.getAccessToken())
+                                            .setUser(userSearchMetadata)
+                                            .build();
+
+                                    UserRepresentation userRepresentation = iamAdminService.getUser(searchRequest);
+                                    UserProfile profile = convertToProfile(userRepresentation);
+                                    UserProfileRequest userProfileRequest = UserProfileRequest.newBuilder()
+                                            .setProfile(profile)
+                                            .setPerformedBy(finalRequest.getUpdatedBy())
+                                            .setTenantId(finalRequest.getTenantId())
+                                            .build();
+
+                                    UserProfile userProfile = userProfileService.getUserProfile(userProfileRequest);
+
+                                    if (userProfile == null || StringUtils.isBlank(userProfile.getUsername())) {
+                                        userProfileService.createUserProfile(userProfileRequest);
+                                    } else {
+                                        userProfileService.updateUserProfile(userProfileRequest);
+                                    }
+
+                                } else {
+                                    String msg = "Tenant Activation task failed, cannot find IAM server credentials";
+                                    LOGGER.error(msg);
+                                    throw new RuntimeException(msg);
+                                }
+                            }
+
+                            @Override
+                            public void onError(ServiceException ex) {
+                                String msg = "Tenant Activation task failed " + ex;
+                                LOGGER.error(msg);
+                                com.veda.central.core.tenant.profile.api.UpdateStatusRequest updateTenantRequest = com.veda.central.core.tenant.profile.api.UpdateStatusRequest.newBuilder()
+                                        .setTenantId(finalRequest.getTenantId())
+                                        .setStatus(TenantStatus.CANCELLED)
+                                        .setUpdatedBy(Constants.SYSTEM)
+                                        .build();
+                                tenantProfileService.updateTenantStatus(updateTenantRequest);
+                                throw new RuntimeException(msg);
+                            }
+                        };
+
+                        ServiceChain chain = ServiceChain.newBuilder(tenantActivationTask, callback).build();
+                        chain.serve(response);
+                    });
+                    return response;
+
+                } else {
+                    return response;
+                }
+            } else {
+                String msg = "Cannot find a Tenant with given client id " + request.getTenantId();
+                LOGGER.error(msg);
+                throw new EntityNotFoundException(msg);
+            }
+
+        } catch (Exception ex) {
+            String msg = "Tenant update task failed for tenant " + request.getTenantId();
+            LOGGER.error(msg, ex);
+            throw new InternalServerException(msg, ex);
         }
     }
 
