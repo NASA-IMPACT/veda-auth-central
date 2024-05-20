@@ -35,5 +35,6 @@ public final class Constants {
     public static final String REFRESH_TOKEN = "refresh_token";
 
     public static final String SYSTEM = "SYSTEM";
+    public static final String USER_TOKEN = "user-token";
 
 }
