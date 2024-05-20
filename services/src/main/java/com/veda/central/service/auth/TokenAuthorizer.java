@@ -29,6 +29,7 @@ import com.veda.central.core.credential.store.api.TokenRequest;
 import com.veda.central.core.credential.store.api.Type;
 import com.veda.central.core.identity.api.AuthToken;
 import com.veda.central.core.identity.api.Claim;
+import com.veda.central.core.identity.api.GetUserManagementSATokenRequest;
 import com.veda.central.core.identity.api.IsAuthenticatedResponse;
 import com.veda.central.core.tenant.profile.api.GetTenantRequest;
 import com.veda.central.core.tenant.profile.api.GetTenantResponse;
@@ -341,6 +342,15 @@ public class TokenAuthorizer {
         } catch (Exception ex) {
             return false;
         }
+    }
+
+    public AuthToken getSAToken(String clientId, String clientSec, long tenantId) {
+        GetUserManagementSATokenRequest userManagementSATokenRequest = GetUserManagementSATokenRequest.newBuilder()
+                .setClientId(clientId)
+                .setClientSecret(clientSec)
+                .setTenantId(tenantId)
+                .build();
+        return identityService.getUserManagementServiceAccountAccessToken(userManagementSATokenRequest);
     }
 
     private boolean validateTenantStatus(long tenantId) {
