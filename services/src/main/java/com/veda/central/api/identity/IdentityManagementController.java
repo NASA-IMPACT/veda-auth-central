@@ -19,6 +19,7 @@
 
 package com.veda.central.api.identity;
 
+import com.veda.central.api.util.ProtobufJsonUtil;
 import com.veda.central.core.credential.store.api.Credentials;
 import com.veda.central.core.identity.api.AuthToken;
 import com.veda.central.core.identity.api.AuthenticationRequest;
@@ -34,23 +35,34 @@ import com.veda.central.core.identity.management.api.AuthorizationRequest;
 import com.veda.central.core.identity.management.api.AuthorizationResponse;
 import com.veda.central.core.identity.management.api.EndSessionRequest;
 import com.veda.central.core.identity.management.api.GetCredentialsRequest;
+import com.veda.central.service.auth.AuthClaim;
+import com.veda.central.service.auth.TokenAuthorizer;
 import com.veda.central.service.management.IdentityManagementService;
 import jakarta.validation.Valid;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.server.ResponseStatusException;
+
+import java.util.Optional;
 
 @RestController
 @RequestMapping("/api/v1/identity-management")
 public class IdentityManagementController {
 
     private final IdentityManagementService identityManagementService;
+    private final TokenAuthorizer tokenAuthorizer;
 
-    public IdentityManagementController(IdentityManagementService identityManagementService) {
+    public IdentityManagementController(IdentityManagementService identityManagementService, TokenAuthorizer tokenAuthorizer) {
         this.identityManagementService = identityManagementService;
+        this.tokenAuthorizer = tokenAuthorizer;
     }
 
     @PostMapping("/authenticate")
@@ -89,10 +101,23 @@ public class IdentityManagementController {
         return ResponseEntity.ok(response);
     }
 
-    @PostMapping("/token")
-    public ResponseEntity<TokenResponse> token(@Valid @RequestBody GetTokenRequest request) {
-        TokenResponse response = identityManagementService.token(request);
-        return ResponseEntity.ok(response);
+    @PostMapping(value = "/token", consumes = MediaType.APPLICATION_JSON_VALUE)
+    public ResponseEntity<String> token(@RequestBody String request, @RequestHeader HttpHeaders headers) {
+        // Expects the Base64 encoded value 'clientId:clientSecret' for Authorization Header
+        GetTokenRequest.Builder builder = ProtobufJsonUtil.jsonToProtobuf(request, GetTokenRequest.newBuilder());
+        Optional<AuthClaim> claim = tokenAuthorizer.authorize(headers);
+
+        if (claim.isPresent()) {
+            AuthClaim authClaim = claim.get();
+            builder.setTenantId(authClaim.getTenantId())
+                    .setClientId(authClaim.getIamAuthId())
+                    .setClientSecret(authClaim.getIamAuthSecret());
+        } else {
+            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Request is not authorized");
+        }
+
+        TokenResponse response = identityManagementService.token(builder.build());
+        return ResponseEntity.ok(ProtobufJsonUtil.protobufToJson(response));
     }
 
     @GetMapping("/credentials")

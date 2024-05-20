@@ -26,6 +26,7 @@ import com.veda.central.core.tenant.management.api.UpdateTenantRequest;
 import com.veda.central.core.tenant.profile.api.Tenant;
 import com.veda.central.service.management.TenantManagementService;
 import jakarta.validation.Valid;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;

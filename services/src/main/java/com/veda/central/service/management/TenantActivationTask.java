@@ -181,7 +181,7 @@ public class TenantActivationTask<T, U> extends ServiceTaskImpl<T, U> {
         credentialStoreService.putCredential(credentialMetadata);
 
         String comment = (tenant.getComment() == null || tenant.getComment().trim().isEmpty()) ?
-                "Created by custos" : tenant.getComment();
+                "Created by VEDA " : tenant.getComment();
 
 
         String[] scopes = tenant.getScope() != null ? tenant.getScope().split(" ") : new String[0];
