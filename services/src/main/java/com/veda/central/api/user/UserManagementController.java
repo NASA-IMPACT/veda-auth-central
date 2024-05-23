@@ -49,6 +49,7 @@ import com.veda.central.core.user.profile.api.UserProfile;
 import com.veda.central.service.auth.AuthClaim;
 import com.veda.central.service.auth.TokenAuthorizer;
 import com.veda.central.service.management.UserManagementService;
+import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import org.apache.commons.lang3.StringUtils;
@@ -81,6 +82,15 @@ public class UserManagementController {
     }
 
     @PostMapping("/user")
+    @Operation(
+            summary = "Register User",
+            description = "This operation registers a new user in the system. The supplied RegisterUserRequest should " +
+                    "include all the necessary user information such as username, email, and other user attributes. " +
+                    "Upon successful registration, the system generates a unique identifier for the user and returns a " +
+                    "RegisterUserResponse enriched with this identifier and other details. Any violation of the user " +
+                    "registration policy (e.g., registering with an already existing username) will be handled according " +
+                    "to the application's error handling protocol."
+    )
     public ResponseEntity<RegisterUserResponse> registerUser(@RequestBody RegisterUserRequest request, @RequestHeader HttpHeaders headers) {
         Optional<AuthClaim> claim = tokenAuthorizer.authorize(headers, request.getClientId());
 
@@ -98,6 +108,15 @@ public class UserManagementController {
     }
 
     @PostMapping("/users")
+    @Operation(
+            summary = "Register and Enable Multiple Users",
+            description = "This operation registers and enables multiple users in the system simultaneously. " +
+                    "The RegisterUsersRequest should include a list of user entities to be registered. " +
+                    "Each entity should have the necessary user information such as username, email, etc. " +
+                    "Upon successful registration and enablement, the system generates unique identifiers for the users and returns a " +
+                    "RegisterUsersResponse with a boolean indicating all the users got registered. " +
+                    "If it false then the response will contain the user representations of the failed users.."
+    )
     public ResponseEntity<RegisterUsersResponse> registerAndEnableUsers(@RequestBody RegisterUsersRequest request, @RequestHeader HttpHeaders headers) {
         headers = attachUserToken(headers, request.getClientId());
         Optional<AuthClaim> claim = tokenAuthorizer.authorize(headers, request.getClientId());
@@ -123,6 +142,13 @@ public class UserManagementController {
     }
 
     @PostMapping("/attributes")
+    @Operation(
+            summary = "Add User Attributes",
+            description = "This operation allows adding custom attributes to an existing user. " +
+                    "The AddUserAttributesRequest should specify the user and the attributes to add. " +
+                    "Upon successful execution, the system adds the new attributes to the user profile and returns an " +
+                    "OperationStatus representing the result."
+    )
     public ResponseEntity<OperationStatus> addUserAttributes(@RequestBody AddUserAttributesRequest request, @RequestHeader HttpHeaders headers) {
         headers = attachUserToken(headers, request.getClientId());
         Optional<AuthClaim> claim = tokenAuthorizer.authorize(headers, request.getClientId());
@@ -148,6 +174,13 @@ public class UserManagementController {
     }
 
     @DeleteMapping("/attributes")
+    @Operation(
+            summary = "Delete User Attributes",
+            description = "This operation allows removing specific attributes from an existing user. " +
+                    "The DeleteUserAttributeRequest should specify the user and the attributes to delete. " +
+                    "Upon successful execution, the system removes the specified attributes from the user profile and returns " +
+                    "an OperationStatus representing the result."
+    )
     public ResponseEntity<OperationStatus> deleteUserAttributes(@RequestBody DeleteUserAttributeRequest request, @RequestHeader HttpHeaders headers) {
         headers = attachUserToken(headers, request.getClientId());
         Optional<AuthClaim> claim = tokenAuthorizer.authorize(headers, request.getClientId());
@@ -173,30 +206,63 @@ public class UserManagementController {
     }
 
     @PostMapping("/user/activation")
+    @Operation(
+            summary = "Enable User",
+            description = "This operation enables a previously disabled user. The UserSearchRequest should specify " +
+                    "the criteria to identify the particular user. Upon successful execution, the system changes the user's " +
+                    "status to 'enabled' and returns an updated UserRepresentation reflecting this new status."
+    )
     public ResponseEntity<UserRepresentation> enableUser(@RequestBody UserSearchRequest request, @RequestHeader HttpHeaders headers) {
         UserRepresentation response = userManagementService.enableUser(generateUserSearchRequestWithoutAdditionalHeader(request.toBuilder(), headers).build());
         return ResponseEntity.ok(response);
     }
 
     @PostMapping("/user/deactivation")
+    @Operation(
+            summary = "Disable User",
+            description = "This operation disables a previously enabled user. The UserSearchRequest should specify " +
+                    "the criteria to identify the particular user. Upon successful execution, the system changes " +
+                    "the user's status to 'disabled' and returns an updated UserRepresentation reflecting this new status."
+    )
     public ResponseEntity<UserRepresentation> disableUser(@RequestBody UserSearchRequest request, @RequestHeader HttpHeaders headers) {
         UserRepresentation response = userManagementService.disableUser(generateUserSearchRequestWithoutAdditionalHeader(request.toBuilder(), headers).build());
         return ResponseEntity.ok(response);
     }
 
     @PostMapping("/user/admin")
+    @Operation(
+            summary = "Grant Admin Privileges",
+            description = "This operation grants admin privileges to a specified existing user. " +
+                    "The UserSearchRequest should specify the criteria to identify the particular user. " +
+                    "After successful execution, the system updates the user's profile to include admin privileges " +
+                    "and returns an OperationStatus reflecting the result of this operation."
+    )
     public ResponseEntity<OperationStatus> grantAdminPrivileges(@RequestBody UserSearchRequest request, @RequestHeader HttpHeaders headers) {
         OperationStatus response = userManagementService.grantAdminPrivileges(generateUserSearchRequest(request.toBuilder(), headers).build());
         return ResponseEntity.ok(response);
     }
 
     @DeleteMapping("/user/admin")
+    @Operation(
+            summary = "Remove Admin Privileges",
+            description = "This operation removes admin privileges from a specified existing user who previously had them. " +
+                    "The UserSearchRequest should specify the criteria to identify the particular user. " +
+                    "Upon successful execution, the system updates the user's profile to remove admin privileges and returns " +
+                    "an OperationStatus reflecting the result."
+    )
     public ResponseEntity<OperationStatus> removeAdminPrivileges(@RequestBody UserSearchRequest request, @RequestHeader HttpHeaders headers) {
         OperationStatus response = userManagementService.removeAdminPrivileges(generateUserSearchRequest(request.toBuilder(), headers).build());
         return ResponseEntity.ok(response);
     }
 
     @DeleteMapping("/users/federatedIDPs")
+    @Operation(
+            summary = "Delete External IDPs Of Users",
+            description = "This operation deletes specified external Identity Providers (IDPs) from identified users. " +
+                    "The DeleteExternalIDPsRequest should include user identifiers and the list of external IDPs to be removed. " +
+                    "Upon successful execution, the system deletes the associated external IDPs from the user profiles " +
+                    "and returns an OperationStatus reflecting the result."
+    )
     public ResponseEntity<OperationStatus> deleteExternalIDPsOfUsers(@RequestBody DeleteExternalIDPsRequest request, @RequestHeader HttpHeaders headers) {
         Optional<AuthClaim> claim = tokenAuthorizer.authorize(headers, request.getClientId());
 
@@ -213,6 +279,13 @@ public class UserManagementController {
     }
 
     @PostMapping("/users/federatedIDPs")
+    @Operation(
+            summary = "Add External IDPs Of Users",
+            description = "This operation associates specified external Identity Providers (IDPs) with identified users. " +
+                    "The AddExternalIDPLinksRequest should include user identifiers and the list of external IDPs to be added. " +
+                    "Upon successful execution, the system associates the specified external IDPs with the user profiles and returns " +
+                    "an OperationStatus reflecting the result."
+    )
     public ResponseEntity<OperationStatus> addExternalIDPsOfUsers(@RequestBody AddExternalIDPLinksRequest request, @RequestHeader HttpHeaders headers) {
         Optional<AuthClaim> claim = tokenAuthorizer.authorize(headers, request.getClientId());
 
@@ -230,6 +303,12 @@ public class UserManagementController {
     }
 
     @GetMapping("/users/federatedIDPs")
+    @Operation(
+            summary = "Get External IDPs Of Users",
+            description = "This operation retrieves associated external Identity Providers (IDPs) of identified users. " +
+                    "The GetExternalIDPsRequest should include user identifiers for whom the external IDPs need to be retrieved. " +
+                    "Upon successful execution, the system returns a GetExternalIDPsResponse containing the associated external IDPs for each user."
+    )
     public ResponseEntity<GetExternalIDPsResponse> getExternalIDPsOfUsers(@RequestBody GetExternalIDPsRequest request, @RequestHeader HttpHeaders headers) {
         Optional<AuthClaim> claim = tokenAuthorizer.authorize(headers, request.getClientId());
 
@@ -246,6 +325,12 @@ public class UserManagementController {
     }
 
     @PostMapping("/users/roles")
+    @Operation(
+            summary = "Add Roles To Users",
+            description = "This operation adds specified roles to identified users. The AddUserRolesRequest " +
+                    "should include user identifiers and the list of roles to be added. Upon successful execution, " +
+                    "the system associates the specified roles with the user profiles and returns an OperationStatus reflecting the result."
+    )
     public ResponseEntity<OperationStatus> addRolesToUsers(@Valid @RequestBody AddUserRolesRequest request, @RequestHeader HttpHeaders headers) {
         headers = attachUserToken(headers, request.getClientId());
         Optional<AuthClaim> claim = tokenAuthorizer.authorize(headers, request.getClientId());
@@ -271,18 +356,36 @@ public class UserManagementController {
     }
 
     @GetMapping("/user/activation/status")
+    @Operation(
+            summary = "Check If User Is Enabled",
+            description = "This operation checks whether a specified user is enabled. The UserSearchRequest " +
+                    "should specify the criteria to identify the particular user. Upon successful execution, " +
+                    "it returns an OperationStatus that reflects whether the user is enabled."
+    )
     public ResponseEntity<OperationStatus> isUserEnabled(@RequestBody UserSearchRequest request, @RequestHeader HttpHeaders headers) {
         OperationStatus response = userManagementService.isUserEnabled(generateUserSearchRequestWithoutAdditionalHeader(request.toBuilder(), headers).build());
         return ResponseEntity.ok(response);
     }
 
     @GetMapping("/user/availability")
+    @Operation(
+            summary = "Check If Username Is Available",
+            description = "This operation checks whether a given username is available. The UserSearchRequest " +
+                    "should specify the username to check. Upon successful execution, it returns an OperationStatus " +
+                    "that reflects whether the username is available for registration."
+    )
     public ResponseEntity<OperationStatus> isUsernameAvailable(@RequestBody UserSearchRequest request, @RequestHeader HttpHeaders headers) {
         OperationStatus response = userManagementService.isUsernameAvailable(generateUserSearchRequestWithoutAdditionalHeader(request.toBuilder(), headers).build());
         return ResponseEntity.ok(response);
     }
 
     @GetMapping("/user")
+    @Operation(
+            summary = "Retrieve User",
+            description = "This operation retrieves a specified user's profile. The UserSearchRequest should specify " +
+                    "the criteria to identify the particular user. It returns a UserRepresentation that includes " +
+                    "detailed information about the user."
+    )
     public ResponseEntity<UserRepresentation> getUser(@Valid @RequestBody UserSearchRequest request, @RequestHeader HttpHeaders headers) {
         Optional<AuthClaim> claim = tokenAuthorizer.authorize(headers, request.getClientId());
 
@@ -300,6 +403,12 @@ public class UserManagementController {
     }
 
     @GetMapping("/users")
+    @Operation(
+            summary = "Find Users",
+            description = "This operation searches for users that match the criteria provided in the FindUsersRequest, " +
+                    "which can include attributes like username, email, roles, etc. It returns a FindUsersResponse " +
+                    "containing the matching users' profiles."
+    )
     public ResponseEntity<FindUsersResponse> findUsers(@RequestBody FindUsersRequest request, @RequestHeader HttpHeaders headers) {
         Optional<AuthClaim> claim = tokenAuthorizer.authorize(headers, request.getClientId());
 
@@ -317,6 +426,12 @@ public class UserManagementController {
     }
 
     @PutMapping("/user/password")
+    @Operation(
+            summary = "Update User Password",
+            description = "This operation updates a specified user's password. An UpdatePasswordRequest should include " +
+                    "user identifier and new password. Upon successful execution, it returns an OperationStatus " +
+                    "reflecting the result of the password update process."
+    )
     public ResponseEntity<OperationStatus> resetPassword(@RequestBody ResetUserPassword request, @RequestHeader HttpHeaders headers) {
         Optional<AuthClaim> claim = tokenAuthorizer.authorize(headers, request.getClientId());
 
@@ -333,12 +448,24 @@ public class UserManagementController {
     }
 
     @DeleteMapping("/user")
+    @Operation(
+            summary = "Delete User",
+            description = "This operation deletes an existing user from the system. The UserSearchRequest should specify " +
+                    "the criteria to identify the particular user. Upon successful execution, the system removes " +
+                    "the user profile and returns an OperationStatus reflecting the result of the delete operation."
+    )
     public ResponseEntity<OperationStatus> deleteUser(@RequestBody UserSearchRequest request, @RequestHeader HttpHeaders headers) {
         OperationStatus response = userManagementService.deleteUser(generateUserSearchRequest(request.toBuilder(), headers).build());
         return ResponseEntity.ok(response);
     }
 
     @DeleteMapping("/user/roles")
+    @Operation(
+            summary = "Delete User Roles",
+            description = "This operation removes specified roles from a identified user. The DeleteUserRolesRequest " +
+                    "should include user identifier and a list of roles to be removed. Upon successful execution, the system " +
+                    "disassociates the specified roles from the user profile and returns an OperationStatus reflecting the result."
+    )
     public ResponseEntity<OperationStatus> deleteUserRoles(@Valid @RequestBody DeleteUserRolesRequest request, @RequestHeader HttpHeaders headers) {
         headers = attachUserToken(headers, request.getClientId());
         Optional<AuthClaim> claim = tokenAuthorizer.authorize(headers, request.getClientId());
@@ -364,6 +491,11 @@ public class UserManagementController {
     }
 
     @PutMapping("/user/profile")
+    @Operation(
+            summary = "Update User Profile",
+            description = "This operation updates profiles of existing users. The UserProfileRequest should specify the updated " +
+                    "user details. Upon successful profile update, the system sends back the updated UserProfile wrapped in a ResponseEntity."
+    )
     public ResponseEntity<UserProfile> updateUserProfile(@RequestBody UserProfileRequest request, @RequestHeader HttpHeaders headers) {
         Optional<AuthClaim> claim = tokenAuthorizer.authorize(headers, request.getClientId());
 
@@ -390,6 +522,11 @@ public class UserManagementController {
     }
 
     @GetMapping("/user/profile")
+    @Operation(
+            summary = "Get User Profile",
+            description = "This operation retrieves the profile of a specified user. The UserProfileRequest should specify which user's " +
+                    "profile is to be retrieved. The system would return a ResponseEntity containing the UserProfile for the specified user."
+    )
     public ResponseEntity<UserProfile> getUserProfile(@Valid @RequestBody UserProfileRequest request, @RequestHeader HttpHeaders headers) {
         Optional<AuthClaim> claim = tokenAuthorizer.authorizeUsingUserToken(headers);
 
@@ -404,6 +541,11 @@ public class UserManagementController {
     }
 
     @DeleteMapping("/user/profile")
+    @Operation(
+            summary = "Delete User Profile",
+            description = "This operation deletes the profile of a specified user. The UserProfileRequest should specify which user's " +
+                    "profile is to be deleted. Upon successful profile deletion, the system would send back a ResponseEntity."
+    )
     public ResponseEntity<UserProfile> deleteUserProfile(@RequestBody UserProfileRequest request, @RequestHeader HttpHeaders headers) {
         Optional<AuthClaim> claim = tokenAuthorizer.authorize(headers, request.getClientId());
 
@@ -421,6 +563,12 @@ public class UserManagementController {
     }
 
     @GetMapping("/users/profile")
+    @Operation(
+            summary = "Get All User Profiles In Tenant",
+            description = "This operation retrieves the profiles of all users in the tenant. A UserProfileRequest is used to get user profiles. " +
+                    "Upon successful execution, the system sends back a ResponseEntity containing GetAllUserProfilesResponse, " +
+                    "wrapping all user profiles in the tenant."
+    )
     public ResponseEntity<GetAllUserProfilesResponse> getAllUserProfilesInTenant(@RequestBody UserProfileRequest request, @RequestHeader HttpHeaders headers) {
         Optional<AuthClaim> claim = tokenAuthorizer.authorize(headers, request.getClientId());
 
@@ -435,6 +583,12 @@ public class UserManagementController {
     }
 
     @PostMapping("/user/profile/mapper")
+    @Operation(
+            summary = "Link User Profile",
+            description = "This operation associates or links profiles of different users. The LinkUserProfileRequest should specify " +
+                    "which user profiles are to be linked. Upon successful execution, the system gives back an OperationStatus wrapped in a " +
+                    "ResponseEntity reflecting the result."
+    )
     public ResponseEntity<OperationStatus> linkUserProfile(@RequestBody LinkUserProfileRequest request, @RequestHeader HttpHeaders headers) {
         String token = tokenAuthorizer.getToken(headers);
         Optional<AuthClaim> claim = tokenAuthorizer.authorizeUsingUserToken(headers);
@@ -456,6 +610,12 @@ public class UserManagementController {
     }
 
     @GetMapping("/user/profile/audit")
+    @Operation(
+            summary = "Get User Profile Audit Trails",
+            description = "This operation retrieves the audit trails of updates to a user's profile. The GetUpdateAuditTrailRequest should specify " +
+                    "the user whose audit trails need to be retrieved. Upon successful execution, the system returns a ResponseEntity containing " +
+                    "a GetUpdateAuditTrailResponse wrapping the retrieved audit details."
+    )
     public ResponseEntity<GetUpdateAuditTrailResponse> getUserProfileAuditTrails(@RequestBody GetUpdateAuditTrailRequest request, @RequestHeader HttpHeaders headers) {
         Optional<AuthClaim> claim = tokenAuthorizer.authorize(headers);
 
@@ -470,6 +630,12 @@ public class UserManagementController {
     }
 
     @PostMapping("/db/synchronize")
+    @Operation(
+            summary = "Synchronize User Databases",
+            description = "This operation synchronizes user databases. The SynchronizeUserDBRequest should contain the necessary " +
+                    "information to perform the synchronization. Upon successful execution, the system provides the synchronization " +
+                    "status within an OperationStatus object wrapped in a ResponseEntity."
+    )
     public ResponseEntity<OperationStatus> synchronizeUserDBs(@Valid @RequestBody SynchronizeUserDBRequest request) {
         OperationStatus response = userManagementService.synchronizeUserDBs(request);
         return ResponseEntity.ok(response);
