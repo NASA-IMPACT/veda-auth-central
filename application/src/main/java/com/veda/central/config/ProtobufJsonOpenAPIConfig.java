@@ -18,16 +18,28 @@
  *
  */
 
-package com.veda.central;
+package com.veda.central.config;
 
-import org.springframework.boot.SpringApplication;
-import org.springframework.boot.autoconfigure.SpringBootApplication;
-import org.springframework.data.jpa.repository.config.EnableJpaAuditing;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.hubspot.jackson.datatype.protobuf.ProtobufModule;
+import io.swagger.v3.core.jackson.ModelResolver;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
 
-@SpringBootApplication
-@EnableJpaAuditing
-public class VedaAuthApplicationService {
-    public static void main(String[] args) {
-        SpringApplication.run(VedaAuthApplicationService.class, args);
+@Configuration
+public class ProtobufJsonOpenAPIConfig {
+
+    @Bean
+    public ObjectMapper objectMapper() {
+        final ObjectMapper objectMapper = new ObjectMapper();
+        objectMapper.registerModule(new ProtobufPropertiesModule());
+        objectMapper.registerModule(new ProtobufModule());
+
+        return objectMapper;
+    }
+
+    @Bean
+    public ModelResolver modelResolver(final ObjectMapper objectMapper) {
+        return new ModelResolver(objectMapper);
     }
 }

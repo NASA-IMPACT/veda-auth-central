@@ -19,8 +19,6 @@
 
 package com.veda.central.api.user;
 
-import com.veda.central.api.util.ProtobufJsonUtil;
-import com.veda.central.api.util.RestUtil;
 import com.veda.central.core.constants.Constants;
 import com.veda.central.core.iam.api.AddExternalIDPLinksRequest;
 import com.veda.central.core.iam.api.AddUserAttributesRequest;
@@ -51,6 +49,7 @@ import com.veda.central.core.user.profile.api.UserProfile;
 import com.veda.central.service.auth.AuthClaim;
 import com.veda.central.service.auth.TokenAuthorizer;
 import com.veda.central.service.management.UserManagementService;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.http.HttpHeaders;
@@ -70,6 +69,7 @@ import java.util.Optional;
 
 @RestController
 @RequestMapping("/api/v1/user-management")
+@Tag(name = "User Management")
 public class UserManagementController {
 
     private final UserManagementService userManagementService;
@@ -81,28 +81,26 @@ public class UserManagementController {
     }
 
     @PostMapping("/user")
-    public ResponseEntity<String> registerUser(@RequestBody String request, @RequestHeader HttpHeaders headers) {
-        RegisterUserRequest.Builder builder = ProtobufJsonUtil.jsonToProtobuf(request, RegisterUserRequest.newBuilder());
-        Optional<AuthClaim> claim = tokenAuthorizer.authorize(headers, builder.getClientId());
+    public ResponseEntity<RegisterUserResponse> registerUser(@RequestBody RegisterUserRequest request, @RequestHeader HttpHeaders headers) {
+        Optional<AuthClaim> claim = tokenAuthorizer.authorize(headers, request.getClientId());
 
         if (claim.isPresent()) {
             AuthClaim authClaim = claim.get();
 
-            builder.setTenantId(authClaim.getTenantId())
+            request = request.toBuilder().setTenantId(authClaim.getTenantId())
                     .setClientId(authClaim.getIamAuthId())
-                    .setClientSec(authClaim.getIamAuthSecret());
+                    .setClientSec(authClaim.getIamAuthSecret()).build();
         } else {
             throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Request is not authorized");
         }
-        RegisterUserResponse response = userManagementService.registerUser(builder.build());
-        return RestUtil.extractOkResponse(response);
+        RegisterUserResponse response = userManagementService.registerUser(request);
+        return ResponseEntity.ok(response);
     }
 
     @PostMapping("/users")
-    public ResponseEntity<String> registerAndEnableUsers(@RequestBody String request, @RequestHeader HttpHeaders headers) {
-        RegisterUsersRequest.Builder builder = ProtobufJsonUtil.jsonToProtobuf(request, RegisterUsersRequest.newBuilder());
-        headers = attachUserToken(headers, builder.getClientId());
-        Optional<AuthClaim> claim = tokenAuthorizer.authorize(headers, builder.getClientId());
+    public ResponseEntity<RegisterUsersResponse> registerAndEnableUsers(@RequestBody RegisterUsersRequest request, @RequestHeader HttpHeaders headers) {
+        headers = attachUserToken(headers, request.getClientId());
+        Optional<AuthClaim> claim = tokenAuthorizer.authorize(headers, request.getClientId());
 
         if (claim.isPresent()) {
             Optional<String> userTokenOp = tokenAuthorizer.getUserTokenFromUserTokenHeader(headers);
@@ -112,23 +110,22 @@ public class UserManagementController {
 
             AuthClaim authClaim = claim.get();
 
-            builder.setClientId(authClaim.getIamAuthId())
+            request = request.toBuilder().setClientId(authClaim.getIamAuthId())
                     .setTenantId(authClaim.getTenantId())
                     .setAccessToken(userToken)
-                    .setPerformedBy(authClaim.getPerformedBy());
+                    .setPerformedBy(authClaim.getPerformedBy()).build();
         } else {
             throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Request is not authorized");
         }
 
-        RegisterUsersResponse response = userManagementService.registerAndEnableUsers(builder.build());
-        return RestUtil.extractOkResponse(response);
+        RegisterUsersResponse response = userManagementService.registerAndEnableUsers(request);
+        return ResponseEntity.ok(response);
     }
 
     @PostMapping("/attributes")
-    public ResponseEntity<String> addUserAttributes(@RequestBody String request, @RequestHeader HttpHeaders headers) {
-        AddUserAttributesRequest.Builder builder = ProtobufJsonUtil.jsonToProtobuf(request, AddUserAttributesRequest.newBuilder());
-        headers = attachUserToken(headers, builder.getClientId());
-        Optional<AuthClaim> claim = tokenAuthorizer.authorize(headers, builder.getClientId());
+    public ResponseEntity<OperationStatus> addUserAttributes(@RequestBody AddUserAttributesRequest request, @RequestHeader HttpHeaders headers) {
+        headers = attachUserToken(headers, request.getClientId());
+        Optional<AuthClaim> claim = tokenAuthorizer.authorize(headers, request.getClientId());
 
         if (claim.isPresent()) {
             AuthClaim authClaim = claim.get();
@@ -138,23 +135,22 @@ public class UserManagementController {
                 throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Request is not authorized. Service Account token is invalid");
             }
 
-            builder.setClientId(authClaim.getIamAuthId())
+            request = request.toBuilder().setClientId(authClaim.getIamAuthId())
                     .setTenantId(authClaim.getTenantId())
                     .setAccessToken(authToken.getAccessToken())
-                    .setPerformedBy(authClaim.getPerformedBy());
+                    .setPerformedBy(authClaim.getPerformedBy()).build();
         } else {
             throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Request is not authorized");
         }
 
-        OperationStatus response = userManagementService.addUserAttributes(builder.build());
-        return RestUtil.extractOkResponse(response);
+        OperationStatus response = userManagementService.addUserAttributes(request);
+        return ResponseEntity.ok(response);
     }
 
     @DeleteMapping("/attributes")
-    public ResponseEntity<String> deleteUserAttributes(@RequestBody String request, @RequestHeader HttpHeaders headers) {
-        DeleteUserAttributeRequest.Builder builder = ProtobufJsonUtil.jsonToProtobuf(request, DeleteUserAttributeRequest.newBuilder());
-        headers = attachUserToken(headers, builder.getClientId());
-        Optional<AuthClaim> claim = tokenAuthorizer.authorize(headers, builder.getClientId());
+    public ResponseEntity<OperationStatus> deleteUserAttributes(@RequestBody DeleteUserAttributeRequest request, @RequestHeader HttpHeaders headers) {
+        headers = attachUserToken(headers, request.getClientId());
+        Optional<AuthClaim> claim = tokenAuthorizer.authorize(headers, request.getClientId());
 
         if (claim.isPresent()) {
             AuthClaim authClaim = claim.get();
@@ -164,99 +160,95 @@ public class UserManagementController {
                 throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Request is not authorized. Service Account token is invalid");
             }
 
-            builder.setClientId(authClaim.getIamAuthId())
+            request = request.toBuilder().setClientId(authClaim.getIamAuthId())
                     .setTenantId(authClaim.getTenantId())
                     .setAccessToken(authToken.getAccessToken())
-                    .setPerformedBy(authClaim.getPerformedBy());
+                    .setPerformedBy(authClaim.getPerformedBy()).build();
         } else {
             throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Request is not authorized");
         }
 
-        OperationStatus response = userManagementService.deleteUserAttributes(builder.build());
-        return RestUtil.extractOkResponse(response);
+        OperationStatus response = userManagementService.deleteUserAttributes(request);
+        return ResponseEntity.ok(response);
     }
 
     @PostMapping("/user/activation")
-    public ResponseEntity<String> enableUser(@RequestBody String request, @RequestHeader HttpHeaders headers) {
-        UserRepresentation response = userManagementService.enableUser(generateUserSearchRequestWithoutAdditionalHeader(request, headers).build());
-        return RestUtil.extractOkResponse(response);
+    public ResponseEntity<UserRepresentation> enableUser(@RequestBody UserSearchRequest request, @RequestHeader HttpHeaders headers) {
+        UserRepresentation response = userManagementService.enableUser(generateUserSearchRequestWithoutAdditionalHeader(request.toBuilder(), headers).build());
+        return ResponseEntity.ok(response);
     }
 
     @PostMapping("/user/deactivation")
-    public ResponseEntity<String> disableUser(@RequestBody String request, @RequestHeader HttpHeaders headers) {
-        UserRepresentation response = userManagementService.disableUser(generateUserSearchRequestWithoutAdditionalHeader(request, headers).build());
-        return RestUtil.extractOkResponse(response);
+    public ResponseEntity<UserRepresentation> disableUser(@RequestBody UserSearchRequest request, @RequestHeader HttpHeaders headers) {
+        UserRepresentation response = userManagementService.disableUser(generateUserSearchRequestWithoutAdditionalHeader(request.toBuilder(), headers).build());
+        return ResponseEntity.ok(response);
     }
 
     @PostMapping("/user/admin")
-    public ResponseEntity<String> grantAdminPrivileges(@RequestBody String request, @RequestHeader HttpHeaders headers) {
-        OperationStatus response = userManagementService.grantAdminPrivileges(generateUserSearchRequest(request, headers).build());
-        return RestUtil.extractOkResponse(response);
+    public ResponseEntity<OperationStatus> grantAdminPrivileges(@RequestBody UserSearchRequest request, @RequestHeader HttpHeaders headers) {
+        OperationStatus response = userManagementService.grantAdminPrivileges(generateUserSearchRequest(request.toBuilder(), headers).build());
+        return ResponseEntity.ok(response);
     }
 
     @DeleteMapping("/user/admin")
-    public ResponseEntity<String> removeAdminPrivileges(@RequestBody String request, @RequestHeader HttpHeaders headers) {
-        OperationStatus response = userManagementService.removeAdminPrivileges(generateUserSearchRequest(request, headers).build());
-        return RestUtil.extractOkResponse(response);
+    public ResponseEntity<OperationStatus> removeAdminPrivileges(@RequestBody UserSearchRequest request, @RequestHeader HttpHeaders headers) {
+        OperationStatus response = userManagementService.removeAdminPrivileges(generateUserSearchRequest(request.toBuilder(), headers).build());
+        return ResponseEntity.ok(response);
     }
 
     @DeleteMapping("/users/federatedIDPs")
-    public ResponseEntity<String> deleteExternalIDPsOfUsers(@RequestBody String request, @RequestHeader HttpHeaders headers) {
-        DeleteExternalIDPsRequest.Builder builder = ProtobufJsonUtil.jsonToProtobuf(request, DeleteExternalIDPsRequest.newBuilder());
-        Optional<AuthClaim> claim = tokenAuthorizer.authorize(headers, builder.getClientId());
+    public ResponseEntity<OperationStatus> deleteExternalIDPsOfUsers(@RequestBody DeleteExternalIDPsRequest request, @RequestHeader HttpHeaders headers) {
+        Optional<AuthClaim> claim = tokenAuthorizer.authorize(headers, request.getClientId());
 
         if (claim.isPresent()) {
             AuthClaim authClaim = claim.get();
 
-            builder.setTenantId(authClaim.getTenantId())
-                    .setClientId(authClaim.getIamAuthId());
+            request = request.toBuilder().setTenantId(authClaim.getTenantId())
+                    .setClientId(authClaim.getIamAuthId()).build();
         } else {
             throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Request is not authorized");
         }
-        OperationStatus response = userManagementService.deleteExternalIDPsOfUsers(builder.build());
-        return RestUtil.extractOkResponse(response);
+        OperationStatus response = userManagementService.deleteExternalIDPsOfUsers(request);
+        return ResponseEntity.ok(response);
     }
 
     @PostMapping("/users/federatedIDPs")
-    public ResponseEntity<String> addExternalIDPsOfUsers(@RequestBody String request, @RequestHeader HttpHeaders headers) {
-        AddExternalIDPLinksRequest.Builder builder = ProtobufJsonUtil.jsonToProtobuf(request, AddExternalIDPLinksRequest.newBuilder());
-        Optional<AuthClaim> claim = tokenAuthorizer.authorize(headers, builder.getClientId());
+    public ResponseEntity<OperationStatus> addExternalIDPsOfUsers(@RequestBody AddExternalIDPLinksRequest request, @RequestHeader HttpHeaders headers) {
+        Optional<AuthClaim> claim = tokenAuthorizer.authorize(headers, request.getClientId());
 
         if (claim.isPresent()) {
             AuthClaim authClaim = claim.get();
 
-            builder.setTenantId(authClaim.getTenantId())
-                    .setClientId(authClaim.getIamAuthId());
+            request = request.toBuilder().setTenantId(authClaim.getTenantId())
+                    .setClientId(authClaim.getIamAuthId()).build();
         } else {
             throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Request is not authorized");
         }
 
-        OperationStatus response = userManagementService.addExternalIDPsOfUsers(builder.build());
-        return RestUtil.extractOkResponse(response);
+        OperationStatus response = userManagementService.addExternalIDPsOfUsers(request);
+        return ResponseEntity.ok(response);
     }
 
     @GetMapping("/users/federatedIDPs")
-    public ResponseEntity<String> getExternalIDPsOfUsers(@RequestBody String request, @RequestHeader HttpHeaders headers) {
-        GetExternalIDPsRequest.Builder builder = ProtobufJsonUtil.jsonToProtobuf(request, GetExternalIDPsRequest.newBuilder());
-        Optional<AuthClaim> claim = tokenAuthorizer.authorize(headers, builder.getClientId());
+    public ResponseEntity<GetExternalIDPsResponse> getExternalIDPsOfUsers(@RequestBody GetExternalIDPsRequest request, @RequestHeader HttpHeaders headers) {
+        Optional<AuthClaim> claim = tokenAuthorizer.authorize(headers, request.getClientId());
 
         if (claim.isPresent()) {
             AuthClaim authClaim = claim.get();
 
-            builder.setTenantId(authClaim.getTenantId())
-                    .setClientId(authClaim.getIamAuthId());
+            request = request.toBuilder().setTenantId(authClaim.getTenantId())
+                    .setClientId(authClaim.getIamAuthId()).build();
         } else {
             throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Request is not authorized");
         }
-        GetExternalIDPsResponse response = userManagementService.getExternalIDPsOfUsers(builder.build());
-        return RestUtil.extractOkResponse(response);
+        GetExternalIDPsResponse response = userManagementService.getExternalIDPsOfUsers(request);
+        return ResponseEntity.ok(response);
     }
 
     @PostMapping("/users/roles")
-    public ResponseEntity<String> addRolesToUsers(@Valid @RequestBody String request, @RequestHeader HttpHeaders headers) {
-        AddUserRolesRequest.Builder builder = ProtobufJsonUtil.jsonToProtobuf(request, AddUserRolesRequest.newBuilder());
-        headers = attachUserToken(headers, builder.getClientId());
-        Optional<AuthClaim> claim = tokenAuthorizer.authorize(headers, builder.getClientId());
+    public ResponseEntity<OperationStatus> addRolesToUsers(@Valid @RequestBody AddUserRolesRequest request, @RequestHeader HttpHeaders headers) {
+        headers = attachUserToken(headers, request.getClientId());
+        Optional<AuthClaim> claim = tokenAuthorizer.authorize(headers, request.getClientId());
 
         if (claim.isPresent()) {
             AuthClaim authClaim = claim.get();
@@ -266,94 +258,90 @@ public class UserManagementController {
                 throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Request is not authorized. Service Account token is invalid");
             }
 
-            builder.setClientId(authClaim.getIamAuthId())
+            request = request.toBuilder().setClientId(authClaim.getIamAuthId())
                     .setTenantId(authClaim.getTenantId())
                     .setAccessToken(authToken.getAccessToken())
-                    .setPerformedBy(authClaim.getPerformedBy());
+                    .setPerformedBy(authClaim.getPerformedBy()).build();
         } else {
             throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Request is not authorized");
         }
 
-        OperationStatus response = userManagementService.addRolesToUsers(builder.build());
-        return RestUtil.extractOkResponse(response);
+        OperationStatus response = userManagementService.addRolesToUsers(request);
+        return ResponseEntity.ok(response);
     }
 
     @GetMapping("/user/activation/status")
-    public ResponseEntity<String> isUserEnabled(@RequestBody String request, @RequestHeader HttpHeaders headers) {
-        OperationStatus response = userManagementService.isUserEnabled(generateUserSearchRequestWithoutAdditionalHeader(request, headers).build());
-        return RestUtil.extractOkResponse(response);
+    public ResponseEntity<OperationStatus> isUserEnabled(@RequestBody UserSearchRequest request, @RequestHeader HttpHeaders headers) {
+        OperationStatus response = userManagementService.isUserEnabled(generateUserSearchRequestWithoutAdditionalHeader(request.toBuilder(), headers).build());
+        return ResponseEntity.ok(response);
     }
 
     @GetMapping("/user/availability")
-    public ResponseEntity<String> isUsernameAvailable(@RequestBody String request, @RequestHeader HttpHeaders headers) {
-        OperationStatus response = userManagementService.isUsernameAvailable(generateUserSearchRequestWithoutAdditionalHeader(request, headers).build());
-        return RestUtil.extractOkResponse(response);
+    public ResponseEntity<OperationStatus> isUsernameAvailable(@RequestBody UserSearchRequest request, @RequestHeader HttpHeaders headers) {
+        OperationStatus response = userManagementService.isUsernameAvailable(generateUserSearchRequestWithoutAdditionalHeader(request.toBuilder(), headers).build());
+        return ResponseEntity.ok(response);
     }
 
     @GetMapping("/user")
-    public ResponseEntity<String> getUser(@Valid @RequestBody String request, @RequestHeader HttpHeaders headers) {
-        UserSearchRequest.Builder builder = ProtobufJsonUtil.jsonToProtobuf(request, UserSearchRequest.newBuilder());
-        Optional<AuthClaim> claim = tokenAuthorizer.authorize(headers, builder.getClientId());
+    public ResponseEntity<UserRepresentation> getUser(@Valid @RequestBody UserSearchRequest request, @RequestHeader HttpHeaders headers) {
+        Optional<AuthClaim> claim = tokenAuthorizer.authorize(headers, request.getClientId());
 
         if (claim.isPresent()) {
             AuthClaim authClaim = claim.get();
-            builder.setClientId(authClaim.getIamAuthId())
+            request = request.toBuilder().setClientId(authClaim.getIamAuthId())
                     .setClientSec(authClaim.getIamAuthSecret())
-                    .setTenantId(claim.get().getTenantId());
+                    .setTenantId(claim.get().getTenantId()).build();
         } else {
             throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Request is not authorized");
         }
 
-        UserRepresentation response = userManagementService.getUser(builder.build());
-        return RestUtil.extractOkResponse(response);
+        UserRepresentation response = userManagementService.getUser(request);
+        return ResponseEntity.ok(response);
     }
 
     @GetMapping("/users")
-    public ResponseEntity<String> findUsers(@RequestBody String request, @RequestHeader HttpHeaders headers) {
-        FindUsersRequest.Builder builder = ProtobufJsonUtil.jsonToProtobuf(request, FindUsersRequest.newBuilder());
-        Optional<AuthClaim> claim = tokenAuthorizer.authorize(headers, builder.getClientId());
+    public ResponseEntity<FindUsersResponse> findUsers(@RequestBody FindUsersRequest request, @RequestHeader HttpHeaders headers) {
+        Optional<AuthClaim> claim = tokenAuthorizer.authorize(headers, request.getClientId());
 
         if (claim.isPresent()) {
             AuthClaim authClaim = claim.get();
-            builder.setClientId(authClaim.getIamAuthId())
+            request = request.toBuilder().setClientId(authClaim.getIamAuthId())
                     .setClientSec(authClaim.getIamAuthSecret())
-                    .setTenantId(claim.get().getTenantId());
+                    .setTenantId(claim.get().getTenantId()).build();
         } else {
             throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Request is not authorized");
         }
 
-        FindUsersResponse response = userManagementService.findUsers(builder.build());
-        return RestUtil.extractOkResponse(response);
+        FindUsersResponse response = userManagementService.findUsers(request);
+        return ResponseEntity.ok(response);
     }
 
     @PutMapping("/user/password")
-    public ResponseEntity<String> resetPassword(@RequestBody String request, @RequestHeader HttpHeaders headers) {
-        ResetUserPassword.Builder builder = ProtobufJsonUtil.jsonToProtobuf(request, ResetUserPassword.newBuilder());
-        Optional<AuthClaim> claim = tokenAuthorizer.authorize(headers, builder.getClientId());
+    public ResponseEntity<OperationStatus> resetPassword(@RequestBody ResetUserPassword request, @RequestHeader HttpHeaders headers) {
+        Optional<AuthClaim> claim = tokenAuthorizer.authorize(headers, request.getClientId());
 
         if (claim.isPresent()) {
             AuthClaim authClaim = claim.get();
-            builder.setClientId(authClaim.getIamAuthId())
+            request = request.toBuilder().setClientId(authClaim.getIamAuthId())
                     .setClientSec(authClaim.getIamAuthSecret())
-                    .setTenantId(claim.get().getTenantId());
+                    .setTenantId(claim.get().getTenantId()).build();
         } else {
             throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Request is not authorized");
         }
-        OperationStatus response = userManagementService.resetPassword(builder.build());
-        return RestUtil.extractOkResponse(response);
+        OperationStatus response = userManagementService.resetPassword(request);
+        return ResponseEntity.ok(response);
     }
 
     @DeleteMapping("/user")
-    public ResponseEntity<String> deleteUser(@RequestBody String request, @RequestHeader HttpHeaders headers) {
-        OperationStatus response = userManagementService.deleteUser(generateUserSearchRequest(request, headers).build());
-        return RestUtil.extractOkResponse(response);
+    public ResponseEntity<OperationStatus> deleteUser(@RequestBody UserSearchRequest request, @RequestHeader HttpHeaders headers) {
+        OperationStatus response = userManagementService.deleteUser(generateUserSearchRequest(request.toBuilder(), headers).build());
+        return ResponseEntity.ok(response);
     }
 
     @DeleteMapping("/user/roles")
-    public ResponseEntity<String> deleteUserRoles(@Valid @RequestBody String request, @RequestHeader HttpHeaders headers) {
-        DeleteUserRolesRequest.Builder builder = ProtobufJsonUtil.jsonToProtobuf(request, DeleteUserRolesRequest.newBuilder());
-        headers = attachUserToken(headers, builder.getClientId());
-        Optional<AuthClaim> claim = tokenAuthorizer.authorize(headers, builder.getClientId());
+    public ResponseEntity<OperationStatus> deleteUserRoles(@Valid @RequestBody DeleteUserRolesRequest request, @RequestHeader HttpHeaders headers) {
+        headers = attachUserToken(headers, request.getClientId());
+        Optional<AuthClaim> claim = tokenAuthorizer.authorize(headers, request.getClientId());
 
         if (claim.isPresent()) {
             AuthClaim authClaim = claim.get();
@@ -363,22 +351,21 @@ public class UserManagementController {
                 throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Request is not authorized. Service Account token is invalid");
             }
 
-            builder.setClientId(authClaim.getIamAuthId())
+            request = request.toBuilder().setClientId(authClaim.getIamAuthId())
                     .setTenantId(authClaim.getTenantId())
                     .setAccessToken(authToken.getAccessToken())
-                    .setPerformedBy(authClaim.getPerformedBy().isEmpty() ? Constants.SYSTEM : authClaim.getPerformedBy());
+                    .setPerformedBy(authClaim.getPerformedBy().isEmpty() ? Constants.SYSTEM : authClaim.getPerformedBy()).build();
         } else {
             throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Request is not authorized");
         }
 
-        OperationStatus response = userManagementService.deleteUserRoles(builder.build());
-        return RestUtil.extractOkResponse(response);
+        OperationStatus response = userManagementService.deleteUserRoles(request);
+        return ResponseEntity.ok(response);
     }
 
     @PutMapping("/user/profile")
-    public ResponseEntity<String> updateUserProfile(@RequestBody String request, @RequestHeader HttpHeaders headers) {
-        UserProfileRequest.Builder builder = ProtobufJsonUtil.jsonToProtobuf(request, UserProfileRequest.newBuilder());
-        Optional<AuthClaim> claim = tokenAuthorizer.authorize(headers, builder.getClientId());
+    public ResponseEntity<UserProfile> updateUserProfile(@RequestBody UserProfileRequest request, @RequestHeader HttpHeaders headers) {
+        Optional<AuthClaim> claim = tokenAuthorizer.authorize(headers, request.getClientId());
 
         if (claim.isPresent()) {
             AuthClaim authClaim = claim.get();
@@ -388,103 +375,98 @@ public class UserManagementController {
                 throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Request is not authorized. Service Account token is invalid");
             }
 
-            builder.setClientId(authClaim.getIamAuthId())
+            request = request.toBuilder().setClientId(authClaim.getIamAuthId())
                     .setClientSecret(authClaim.getIamAuthSecret())
                     .setTenantId(authClaim.getTenantId())
                     .setAccessToken(authToken.getAccessToken())
-                    .setPerformedBy(Constants.SYSTEM);
+                    .setPerformedBy(Constants.SYSTEM).build();
         } else {
             throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Request is not authorized");
         }
 
 
-        UserProfile response = userManagementService.updateUserProfile(builder.build());
-        return RestUtil.extractOkResponse(response);
+        UserProfile response = userManagementService.updateUserProfile(request);
+        return ResponseEntity.ok(response);
     }
 
     @GetMapping("/user/profile")
-    public ResponseEntity<String> getUserProfile(@Valid @RequestBody String request, @RequestHeader HttpHeaders headers) {
-        UserProfileRequest.Builder builder = ProtobufJsonUtil.jsonToProtobuf(request, UserProfileRequest.newBuilder());
+    public ResponseEntity<UserProfile> getUserProfile(@Valid @RequestBody UserProfileRequest request, @RequestHeader HttpHeaders headers) {
         Optional<AuthClaim> claim = tokenAuthorizer.authorizeUsingUserToken(headers);
 
         if (claim.isPresent()) {
-            builder.setTenantId(claim.get().getTenantId());
+            request = request.toBuilder().setTenantId(claim.get().getTenantId()).build();
         } else {
             throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Request is not authorized");
         }
 
-        UserProfile response = userManagementService.getUserProfile(builder.build());
-        return RestUtil.extractOkResponse(response);
+        UserProfile response = userManagementService.getUserProfile(request);
+        return ResponseEntity.ok(response);
     }
 
     @DeleteMapping("/user/profile")
-    public ResponseEntity<String> deleteUserProfile(@RequestBody String request, @RequestHeader HttpHeaders headers) {
-        UserProfileRequest.Builder builder = ProtobufJsonUtil.jsonToProtobuf(request, UserProfileRequest.newBuilder());
-        Optional<AuthClaim> claim = tokenAuthorizer.authorize(headers, builder.getClientId());
+    public ResponseEntity<UserProfile> deleteUserProfile(@RequestBody UserProfileRequest request, @RequestHeader HttpHeaders headers) {
+        Optional<AuthClaim> claim = tokenAuthorizer.authorize(headers, request.getClientId());
 
         if (claim.isPresent()) {
             AuthClaim authClaim = claim.get();
-            builder.setClientId(authClaim.getIamAuthId())
+            request = request.toBuilder().setClientId(authClaim.getIamAuthId())
                     .setClientSecret(authClaim.getIamAuthSecret())
-                    .setTenantId(authClaim.getTenantId());
+                    .setTenantId(authClaim.getTenantId()).build();
         } else {
             throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Request is not authorized");
         }
 
-        UserProfile response = userManagementService.deleteUserProfile(builder.build());
-        return RestUtil.extractOkResponse(response);
+        UserProfile response = userManagementService.deleteUserProfile(request);
+        return ResponseEntity.ok(response);
     }
 
     @GetMapping("/users/profile")
-    public ResponseEntity<String> getAllUserProfilesInTenant(@RequestBody String request, @RequestHeader HttpHeaders headers) {
-        UserProfileRequest.Builder builder = ProtobufJsonUtil.jsonToProtobuf(request, UserProfileRequest.newBuilder());
-        Optional<AuthClaim> claim = tokenAuthorizer.authorize(headers, builder.getClientId());
+    public ResponseEntity<GetAllUserProfilesResponse> getAllUserProfilesInTenant(@RequestBody UserProfileRequest request, @RequestHeader HttpHeaders headers) {
+        Optional<AuthClaim> claim = tokenAuthorizer.authorize(headers, request.getClientId());
 
         if (claim.isPresent()) {
-            builder.setTenantId(claim.get().getTenantId());
+            request = request.toBuilder().setTenantId(claim.get().getTenantId()).build();
         } else {
             throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Request is not authorized");
         }
 
-        GetAllUserProfilesResponse response = userManagementService.getAllUserProfilesInTenant(builder.build());
-        return RestUtil.extractOkResponse(response);
+        GetAllUserProfilesResponse response = userManagementService.getAllUserProfilesInTenant(request);
+        return ResponseEntity.ok(response);
     }
 
     @PostMapping("/user/profile/mapper")
-    public ResponseEntity<String> linkUserProfile(@RequestBody String request, @RequestHeader HttpHeaders headers) {
-        LinkUserProfileRequest.Builder builder = ProtobufJsonUtil.jsonToProtobuf(request, LinkUserProfileRequest.newBuilder());
+    public ResponseEntity<OperationStatus> linkUserProfile(@RequestBody LinkUserProfileRequest request, @RequestHeader HttpHeaders headers) {
         String token = tokenAuthorizer.getToken(headers);
         Optional<AuthClaim> claim = tokenAuthorizer.authorizeUsingUserToken(headers);
 
         if (claim.isPresent()) {
             AuthClaim authClaim = claim.get();
 
-            builder.setIamClientId(authClaim.getIamAuthId())
+            request = request.toBuilder().setIamClientId(authClaim.getIamAuthId())
                     .setIamClientSecret(authClaim.getIamAuthSecret())
                     .setTenantId(authClaim.getTenantId())
                     .setAccessToken(token)
-                    .setPerformedBy(authClaim.getPerformedBy());
+                    .setPerformedBy(authClaim.getPerformedBy()).build();
         } else {
             throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Request is not authorized");
         }
 
-        OperationStatus response = userManagementService.linkUserProfile(builder.build());
-        return RestUtil.extractOkResponse(response);
+        OperationStatus response = userManagementService.linkUserProfile(request);
+        return ResponseEntity.ok(response);
     }
 
     @GetMapping("/user/profile/audit")
-    public ResponseEntity<String> getUserProfileAuditTrails(@RequestBody String request, @RequestHeader HttpHeaders headers) {
-        GetUpdateAuditTrailRequest.Builder builder = ProtobufJsonUtil.jsonToProtobuf(request, GetUpdateAuditTrailRequest.newBuilder());
+    public ResponseEntity<GetUpdateAuditTrailResponse> getUserProfileAuditTrails(@RequestBody GetUpdateAuditTrailRequest request, @RequestHeader HttpHeaders headers) {
         Optional<AuthClaim> claim = tokenAuthorizer.authorize(headers);
 
         if (claim.isPresent()) {
-            builder.setTenantId(claim.get().getTenantId());
+            request = request.toBuilder().setTenantId(claim.get().getTenantId()).build();
         } else {
             throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Request is not authorized");
         }
 
-        GetUpdateAuditTrailResponse response = userManagementService.getUserProfileAuditTrails(builder.build());
-        return RestUtil.extractOkResponse(response);
+        GetUpdateAuditTrailResponse response = userManagementService.getUserProfileAuditTrails(request);
+        return ResponseEntity.ok(response);
     }
 
     @PostMapping("/db/synchronize")
@@ -503,8 +485,7 @@ public class UserManagementController {
         return headers;
     }
 
-    private UserSearchRequest.Builder generateUserSearchRequest(String request, HttpHeaders headers) {
-        UserSearchRequest.Builder builder = ProtobufJsonUtil.jsonToProtobuf(request, UserSearchRequest.newBuilder());
+    private UserSearchRequest.Builder generateUserSearchRequest(UserSearchRequest.Builder builder, HttpHeaders headers) {
         headers = attachUserToken(headers, builder.getClientId());
         Optional<AuthClaim> claim = tokenAuthorizer.authorize(headers, builder.getClientId());
 
@@ -529,8 +510,7 @@ public class UserManagementController {
         }
     }
 
-    private UserSearchRequest.Builder generateUserSearchRequestWithoutAdditionalHeader(String request, HttpHeaders headers) {
-        UserSearchRequest.Builder builder = ProtobufJsonUtil.jsonToProtobuf(request, UserSearchRequest.newBuilder());
+    private UserSearchRequest.Builder generateUserSearchRequestWithoutAdditionalHeader(UserSearchRequest.Builder builder, HttpHeaders headers) {
         Optional<AuthClaim> claim = tokenAuthorizer.authorize(headers, builder.getClientId());
 
         if (claim.isPresent()) {

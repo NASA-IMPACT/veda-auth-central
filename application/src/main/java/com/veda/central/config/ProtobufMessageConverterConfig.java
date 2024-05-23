@@ -18,16 +18,26 @@
  *
  */
 
-package com.veda.central;
+package com.veda.central.config;
 
-import org.springframework.boot.SpringApplication;
-import org.springframework.boot.autoconfigure.SpringBootApplication;
-import org.springframework.data.jpa.repository.config.EnableJpaAuditing;
+import com.veda.central.api.ProtobufJsonHttpMessageConverter;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
+import org.springframework.http.converter.HttpMessageConverter;
+import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 
-@SpringBootApplication
-@EnableJpaAuditing
-public class VedaAuthApplicationService {
-    public static void main(String[] args) {
-        SpringApplication.run(VedaAuthApplicationService.class, args);
+import java.util.List;
+
+@Configuration
+public class ProtobufMessageConverterConfig implements WebMvcConfigurer {
+
+    @Bean
+    public ProtobufJsonHttpMessageConverter protobufHttpMessageConverter() {
+        return new ProtobufJsonHttpMessageConverter();
+    }
+
+    @Override
+    public void configureMessageConverters(List<HttpMessageConverter<?>> converters) {
+        converters.add(protobufHttpMessageConverter());
     }
 }

@@ -64,6 +64,16 @@
                 <artifactId>protobuf-java-util</artifactId>
                 <version>${protobuf.version}</version>
             </dependency>
+            <dependency>
+                <groupId>org.springdoc</groupId>
+                <artifactId>springdoc-openapi-starter-webmvc-ui</artifactId>
+                <version>${springdoc.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.hubspot.jackson</groupId>
+                <artifactId>jackson-datatype-protobuf</artifactId>
+                <version>${protobuf.json.version}</version>
+            </dependency>
         </dependencies>
     </dependencyManagement>
 
@@ -85,6 +95,8 @@
         <apache.commons.lang3.version>3.14.0</apache.commons.lang3.version>
         <mysql.connector.java>8.0.31</mysql.connector.java>
         <spring.cloud.vault.version>4.0.1</spring.cloud.vault.version>
+        <springdoc.version>2.5.0</springdoc.version>
+        <protobuf.json.version>0.9.15</protobuf.json.version>
     </properties>
 
     <build>

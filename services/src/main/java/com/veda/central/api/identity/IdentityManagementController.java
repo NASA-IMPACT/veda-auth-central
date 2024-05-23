@@ -19,8 +19,6 @@
 
 package com.veda.central.api.identity;
 
-import com.google.protobuf.Message;
-import com.veda.central.api.util.ProtobufJsonUtil;
 import com.veda.central.core.credential.store.api.Credentials;
 import com.veda.central.core.identity.api.AuthToken;
 import com.veda.central.core.identity.api.AuthenticationRequest;
@@ -40,6 +38,9 @@ import com.veda.central.core.identity.management.api.GetCredentialsRequest;
 import com.veda.central.service.auth.AuthClaim;
 import com.veda.central.service.auth.TokenAuthorizer;
 import com.veda.central.service.management.IdentityManagementService;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.validation.Valid;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
@@ -56,6 +57,7 @@ import java.util.Optional;
 
 @RestController
 @RequestMapping("/api/v1/identity-management")
+@Tag(name = "Identity Management")
 public class IdentityManagementController {
 
     private final IdentityManagementService identityManagementService;
@@ -67,55 +69,75 @@ public class IdentityManagementController {
     }
 
     @PostMapping("/authenticate")
-    public ResponseEntity<String> authenticate(@RequestBody String request, @RequestHeader HttpHeaders headers) {
-        AuthenticationRequest.Builder builder = ProtobufJsonUtil.jsonToProtobuf(request, AuthenticationRequest.newBuilder());
+    @Operation(
+            summary = "User Authentication",
+            description = "Authenticates the user by verifying the provided request credentials. If authenticated successfully, " +
+                    "returns an AuthToken which includes authentication details and associated claims."
+    )
+    public ResponseEntity<AuthToken> authenticate(@RequestBody AuthenticationRequest request, @RequestHeader HttpHeaders headers) {
         Optional<AuthClaim> claim = tokenAuthorizer.authorize(headers);
 
         if (claim.isPresent()) {
             AuthClaim authClaim = claim.get();
-            builder.setTenantId(authClaim.getTenantId())
+            request.toBuilder().setTenantId(authClaim.getTenantId())
                     .setClientId(authClaim.getIamAuthId())
                     .setClientSecret(authClaim.getIamAuthSecret());
         } else {
             throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Request is not authorized");
         }
 
-        AuthToken response = identityManagementService.authenticate(builder.build());
-        return extractOkResponse(response);
+        AuthToken response = identityManagementService.authenticate(request);
+        return ResponseEntity.ok(response);
     }
 
     @PostMapping("/authenticate/status")
-    public ResponseEntity<String> isAuthenticated(@RequestBody String request, @RequestHeader HttpHeaders headers) {
-        IsAuthenticatedResponse response = identityManagementService.isAuthenticated(generateAuthTokenRequest(request, headers).build());
-        return extractOkResponse(response);
+    @Operation(
+            summary = "Authentication Status Check",
+            description = "Checks the authentication status based on the provided AuthToken. Returns an IsAuthenticatedResponse portraying the status."
+    )
+    public ResponseEntity<IsAuthenticatedResponse> isAuthenticated(@RequestBody AuthToken request, @RequestHeader HttpHeaders headers) {
+        IsAuthenticatedResponse response = identityManagementService.isAuthenticated(generateAuthTokenRequest(request.toBuilder(), headers).build());
+        return ResponseEntity.ok(response);
     }
 
     @GetMapping("/user")
-    public ResponseEntity<String> getUser(@RequestBody String request, @RequestHeader HttpHeaders headers) {
-        User response = identityManagementService.getUser(generateAuthTokenRequest(request, headers).build());
-        return extractOkResponse(response);
+    @Operation(
+            summary = "Retrieve User Information",
+            description = "Retrieves User Information using the provided AuthToken. Returns a User object containing user details."
+    )
+    public ResponseEntity<User> getUser(@RequestBody AuthToken request, @RequestHeader HttpHeaders headers) {
+        User response = identityManagementService.getUser(generateAuthTokenRequest(request.toBuilder(), headers).build());
+        return ResponseEntity.ok(response);
     }
 
     @GetMapping("/account/token")
-    public ResponseEntity<String> getUserManagementServiceAccountAccessToken(@RequestBody String request, @RequestHeader HttpHeaders headers) {
-        GetUserManagementSATokenRequest.Builder builder = ProtobufJsonUtil.jsonToProtobuf(request, GetUserManagementSATokenRequest.newBuilder());
+    @Operation(
+            summary = "Get User Management Service Account Access Token",
+            description = "Retrieves the User Management Service Account Access Token using the provided GetUserManagementSATokenRequest. " +
+                    "Returns an AuthToken for the user management service account."
+    )
+    public ResponseEntity<AuthToken> getUserManagementServiceAccountAccessToken(@Valid @RequestBody GetUserManagementSATokenRequest request, @RequestHeader HttpHeaders headers) {
         Optional<AuthClaim> claim = tokenAuthorizer.authorize(headers);
         if (claim.isPresent()) {
             AuthClaim authClaim = claim.get();
-            builder.setTenantId(authClaim.getTenantId())
+            request = request.toBuilder().setTenantId(authClaim.getTenantId())
                     .setClientId(authClaim.getIamAuthId())
-                    .setClientSecret(authClaim.getIamAuthSecret());
+                    .setClientSecret(authClaim.getIamAuthSecret()).build();
         } else {
             throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Request is not authorized");
         }
 
-        AuthToken response = identityManagementService.getUserManagementServiceAccountAccessToken(builder.build());
-        return extractOkResponse(response);
+        AuthToken response = identityManagementService.getUserManagementServiceAccountAccessToken(request);
+        return ResponseEntity.ok(response);
     }
 
     @PostMapping("/user/logout")
-    public ResponseEntity<String> endUserSession(@RequestBody String request, @RequestHeader HttpHeaders headers) {
-        EndSessionRequest.Builder builder = ProtobufJsonUtil.jsonToProtobuf(request, EndSessionRequest.newBuilder());
+    @Operation(
+            summary = "End User Session",
+            description = "Ends the user session based on the provided EndSessionRequest. " +
+                    "Returns an OperationStatus response confirming the action."
+    )
+    public ResponseEntity<OperationStatus> endUserSession(@RequestBody EndSessionRequest request, @RequestHeader HttpHeaders headers) {
         Optional<AuthClaim> claim = tokenAuthorizer.authorize(headers);
 
         if (claim.isPresent()) {
@@ -125,45 +147,55 @@ public class IdentityManagementController {
                     .setClientId(authClaim.getIamAuthId())
                     .setClientSecret(authClaim.getIamAuthSecret())
                     .build();
-            builder.setBody(endSessionRequest);
+            request = request.toBuilder().setBody(endSessionRequest).build();
         } else {
             throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Request is not authorized");
         }
 
-        OperationStatus response = identityManagementService.endUserSession(builder.build());
-        return extractOkResponse(response);
+        OperationStatus response = identityManagementService.endUserSession(request);
+        return ResponseEntity.ok(response);
     }
 
     @GetMapping("/authorize")
-    public ResponseEntity<String> authorize(@RequestBody String request) {
-        AuthorizationRequest.Builder builder = ProtobufJsonUtil.jsonToProtobuf(request, AuthorizationRequest.newBuilder());
-        AuthorizationResponse response = identityManagementService.authorize(builder.build());
-        return extractOkResponse(response);
+    @Operation(
+            summary = "Authorize User",
+            description = "Authorizes the user by verifying the provided AuthorizationRequest. If authorized, an AuthorizationResponse is returned."
+    )
+    public ResponseEntity<AuthorizationResponse> authorize(@RequestBody AuthorizationRequest request) {
+        AuthorizationResponse response = identityManagementService.authorize(request);
+        return ResponseEntity.ok(response);
     }
 
     @PostMapping(value = "/token", consumes = MediaType.APPLICATION_JSON_VALUE)
-    public ResponseEntity<String> token(@RequestBody String request, @RequestHeader HttpHeaders headers) {
+    @Operation(
+            summary = "Get Token",
+            description = "Retrieves a token based on the provided GetTokenRequest. If successful, returns a TokenResponse."
+    )
+    public ResponseEntity<TokenResponse> token(@RequestBody GetTokenRequest request, @RequestHeader HttpHeaders headers) {
         // Expects the Base64 encoded value 'clientId:clientSecret' for Authorization Header
-        GetTokenRequest.Builder builder = ProtobufJsonUtil.jsonToProtobuf(request, GetTokenRequest.newBuilder());
         Optional<AuthClaim> claim = tokenAuthorizer.authorize(headers);
 
         if (claim.isPresent()) {
             AuthClaim authClaim = claim.get();
-            builder.setTenantId(authClaim.getTenantId())
+            request = request.toBuilder().setTenantId(authClaim.getTenantId())
                     .setClientId(authClaim.getIamAuthId())
-                    .setClientSecret(authClaim.getIamAuthSecret());
+                    .setClientSecret(authClaim.getIamAuthSecret())
+                    .build();
         } else {
             throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Request is not authorized");
         }
 
-        TokenResponse response = identityManagementService.token(builder.build());
-        return extractOkResponse(response);
+        TokenResponse response = identityManagementService.token(request);
+        return ResponseEntity.ok(response);
     }
 
     @GetMapping("/credentials")
-    public ResponseEntity<String> getCredentials(@RequestBody String request, @RequestHeader HttpHeaders headers) {
-        GetCredentialsRequest.Builder builder = ProtobufJsonUtil.jsonToProtobuf(request, GetCredentialsRequest.newBuilder());
-        Optional<AuthClaim> claim = tokenAuthorizer.authorize(headers, builder.getClientId());
+    @Operation(
+            summary = "Get Credentials",
+            description = "Retrieves credentials based on the provided GetCredentialsRequest. Returns a Credentials object."
+    )
+    public ResponseEntity<Credentials> getCredentials(@RequestBody GetCredentialsRequest request, @RequestHeader HttpHeaders headers) {
+        Optional<AuthClaim> claim = tokenAuthorizer.authorize(headers, request.getClientId());
 
         if (claim.isPresent()) {
             AuthClaim authClaim = claim.get();
@@ -177,33 +209,33 @@ public class IdentityManagementController {
                     .setIamClientId(authClaim.getIamAuthId())
                     .setIamClientSecret(authClaim.getIamAuthSecret())
                     .build();
-            builder.setCredentials(credentials);
+            request = request.toBuilder().setCredentials(credentials).build();
         } else {
             throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Request is not authorized");
         }
 
-        Credentials response = identityManagementService.getCredentials(builder.build());
-        return extractOkResponse(response);
+        Credentials response = identityManagementService.getCredentials(request);
+        return ResponseEntity.ok(response);
     }
 
     @GetMapping("/.well-known/openid-configuration")
-    public ResponseEntity<String> getOIDCConfiguration(@RequestBody String request) {
-        GetOIDCConfiguration.Builder builder = ProtobufJsonUtil.jsonToProtobuf(request, GetOIDCConfiguration.newBuilder());
-        OIDCConfiguration response = identityManagementService.getOIDCConfiguration(builder.build());
-        return extractOkResponse(response);
+    @Operation(
+            summary = "Get OIDC Configuration",
+            description = "Retrieves the OpenID Connect (OIDC) configuration using the provided GetOIDCConfiguration request. " +
+                    "Returns an OIDCConfiguration object."
+    )
+    public ResponseEntity<OIDCConfiguration> getOIDCConfiguration(@RequestBody GetOIDCConfiguration request) {
+        OIDCConfiguration response = identityManagementService.getOIDCConfiguration(request);
+        return ResponseEntity.ok(response);
     }
 
-    private ResponseEntity<String> extractOkResponse(Message message) {
-        return ResponseEntity.ok(ProtobufJsonUtil.protobufToJson(message));
-    }
 
-    private AuthToken.Builder generateAuthTokenRequest(String request, HttpHeaders headers) {
+    private AuthToken.Builder generateAuthTokenRequest(AuthToken.Builder builder, HttpHeaders headers) {
         Optional<AuthClaim> claim = tokenAuthorizer.authorize(headers);
         if (claim.isEmpty()) {
             throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Request is not authorized");
         }
 
-        AuthToken.Builder builder = ProtobufJsonUtil.jsonToProtobuf(request, AuthToken.newBuilder());
         Optional<AuthClaim> opAuthClaim = tokenAuthorizer.authorizeUsingUserToken(builder.getAccessToken());
 
         if (opAuthClaim.isPresent()) {
