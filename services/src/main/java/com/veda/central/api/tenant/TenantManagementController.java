@@ -402,4 +402,16 @@ public class TenantManagementController {
                 .setCiLogonClientId(claim.getCiLogonId())
                 .setCiLogonClientSecret(claim.getCiLogonSecret()).build();
     }
+
+    private CacheManipulationRequest generateCacheManipulationRequest(CacheManipulationRequest request, @RequestHeader HttpHeaders headers) {
+        Optional<AuthClaim> claim = tokenAuthorizer.authorize(headers);
+        if (claim.isPresent()) {
+            AuthClaim authClaim = claim.get();
+            return request.toBuilder()
+                    .setTenantId(authClaim.getTenantId())
+                    .build();
+        } else {
+            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Request is not authorized, token not found");
+        }
+    }
 }
