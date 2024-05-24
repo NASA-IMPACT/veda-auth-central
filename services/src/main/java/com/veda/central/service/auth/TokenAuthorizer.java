@@ -353,6 +353,33 @@ public class TokenAuthorizer {
         return identityService.getUserManagementServiceAccountAccessToken(userManagementSATokenRequest);
     }
 
+    public CredentialMetadata getCredentialsFromClientId(String clientId) {
+        GetCredentialRequest request = GetCredentialRequest.newBuilder()
+                .setId(clientId)
+                .build();
+        CredentialMetadata metadata = credentialStoreService.getVedaCredentialFromClientId(request);
+
+        if (metadata == null || metadata.getOwnerId() == 0) {
+            throw new UnauthorizedException("Invalid client_id", null);
+        }
+
+        return metadata;
+    }
+
+    public Optional<AuthClaim> validateUserToken(HttpHeaders headers) {
+        try {
+            String userToken = headers.getFirst(Constants.USER_TOKEN);
+            if (userToken == null) {
+                return Optional.empty();
+            }
+            return authorizeUsingUserToken(userToken);
+
+        } catch (Exception ex) {
+            LOGGER.error("Authorizing error " + ex.getMessage());
+            throw new UnauthorizedException("Request is not authorized", ex);
+        }
+    }
+
     private boolean validateTenantStatus(long tenantId) {
         GetTenantRequest tenantRequest = GetTenantRequest.newBuilder().setTenantId(tenantId).build();
         GetTenantResponse tentResp = tenantProfileService.getTenant(tenantRequest);

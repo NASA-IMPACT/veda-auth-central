@@ -26,7 +26,16 @@ import com.veda.central.core.credential.store.api.GetAllCredentialsResponse;
 import com.veda.central.core.credential.store.api.GetCredentialRequest;
 import com.veda.central.core.credential.store.api.GetNewVedaCredentialRequest;
 import com.veda.central.core.credential.store.api.Type;
+import com.veda.central.core.federated.authentication.api.CacheManipulationRequest;
 import com.veda.central.core.federated.authentication.api.DeleteClientRequest;
+import com.veda.central.core.federated.authentication.api.GetInstitutionsResponse;
+import com.veda.central.core.iam.api.AddProtocolMapperRequest;
+import com.veda.central.core.iam.api.AddRolesRequest;
+import com.veda.central.core.iam.api.AllRoles;
+import com.veda.central.core.iam.api.DeleteRoleRequest;
+import com.veda.central.core.iam.api.EventPersistenceRequest;
+import com.veda.central.core.iam.api.GetRolesRequest;
+import com.veda.central.core.iam.api.OperationStatus;
 import com.veda.central.core.iam.api.UserAttribute;
 import com.veda.central.core.iam.api.UserRepresentation;
 import com.veda.central.core.iam.api.UserSearchMetadata;
@@ -40,8 +49,16 @@ import com.veda.central.core.tenant.management.api.CreateTenantResponse;
 import com.veda.central.core.tenant.management.api.Credentials;
 import com.veda.central.core.tenant.management.api.DeleteTenantRequest;
 import com.veda.central.core.tenant.management.api.GetTenantRequest;
+import com.veda.central.core.tenant.management.api.TenantValidationRequest;
 import com.veda.central.core.tenant.management.api.UpdateTenantRequest;
+import com.veda.central.core.tenant.profile.api.GetAllTenantsForUserRequest;
+import com.veda.central.core.tenant.profile.api.GetAllTenantsForUserResponse;
+import com.veda.central.core.tenant.profile.api.GetAllTenantsResponse;
+import com.veda.central.core.tenant.profile.api.GetAttributeUpdateAuditTrailResponse;
+import com.veda.central.core.tenant.profile.api.GetAuditTrailRequest;
+import com.veda.central.core.tenant.profile.api.GetStatusUpdateAuditTrailResponse;
 import com.veda.central.core.tenant.profile.api.GetTenantResponse;
+import com.veda.central.core.tenant.profile.api.GetTenantsRequest;
 import com.veda.central.core.tenant.profile.api.Tenant;
 import com.veda.central.core.tenant.profile.api.TenantStatus;
 import com.veda.central.core.tenant.profile.api.UpdateStatusRequest;
@@ -488,6 +505,211 @@ public class TenantManagementService {
             LOGGER.error(msg, ex);
             throw new InternalServerException(msg, ex);
         }
+    }
+
+    public OperationStatus validateTenant(TenantValidationRequest request) {
+        try {
+            GetCredentialRequest credentialRequest = GetCredentialRequest.newBuilder()
+                    .setId(request.getClientId()).build();
+
+            CredentialMetadata metadata = credentialStoreService.getVedaCredentialFromClientId(credentialRequest);
+            return OperationStatus.newBuilder().setStatus(metadata.getSecret().trim().equals(request.getClientSec().trim())).build();
+
+        } catch (Exception ex) {
+            String msg = "Error occurred while validating tenant with Id " + request.getClientId() + " reason: " + ex.getMessage();
+            LOGGER.error(msg, ex);
+            throw new InternalServerException(msg, ex);
+        }
+    }
+
+    public AllRoles addTenantRoles(AddRolesRequest request) {
+        try {
+            return iamAdminService.addRolesToTenant(request);
+        } catch (Exception ex) {
+            String msg = "Error occurred at addTenantRoles " + ex.getMessage();
+            LOGGER.error(msg);
+            throw new InternalServerException(msg, ex);
+        }
+    }
+
+    public AllRoles getTenantRoles(GetRolesRequest request) {
+        try {
+            return iamAdminService.getRolesOfTenant(request);
+        } catch (Exception ex) {
+            String msg = "Error occurred at getTenantRoles " + ex.getMessage();
+            LOGGER.error(msg, ex);
+            throw new InternalServerException(msg, ex);
+        }
+    }
+
+    public OperationStatus deleteRole(DeleteRoleRequest request) {
+        try {
+            return iamAdminService.deleteRole(request);
+        } catch (Exception ex) {
+            String msg = "Error occurred at deleteRole " + request.getRole() + " of tenant " + request.getTenantId() + ex.getMessage();
+            LOGGER.error(msg, ex);
+            throw new InternalServerException(msg, ex);
+        }
+    }
+
+    public OperationStatus addProtocolMapper(AddProtocolMapperRequest request) {
+        try {
+            return iamAdminService.addProtocolMapper(request);
+        } catch (Exception ex) {
+            String msg = "Error occurred at addProtocolMapper " + ex.getMessage();
+            LOGGER.error(msg, ex);
+            throw new InternalServerException(msg, ex);
+        }
+    }
+
+    public OperationStatus configureEventPersistence(EventPersistenceRequest request) {
+        try {
+            return iamAdminService.configureEventPersistence(request);
+        } catch (Exception ex) {
+            String msg = "Error occurred at configureEventPersistence " + ex.getMessage();
+            LOGGER.error(msg);
+            throw new InternalServerException(msg, ex);
+        }
+    }
+
+    public GetAllTenantsResponse getAllTenants(GetTenantsRequest request) {
+        try {
+            GetAllTenantsResponse response = tenantProfileService.getAllTenants(request);
+            if (response != null && !response.getTenantList().isEmpty()) {
+                List<Tenant> tenantList = new ArrayList<>();
+
+                for (Tenant tenant : response.getTenantList()) {
+                    GetCredentialRequest credentialRequest = GetCredentialRequest.newBuilder()
+                            .setOwnerId(tenant.getTenantId())
+                            .setType(Type.VEDA)
+                            .build();
+
+                    CredentialMetadata metadata = credentialStoreService.getCredential(credentialRequest);
+
+                    if (tenant.getParentTenantId() > 0) {
+                        GetCredentialRequest cR = GetCredentialRequest.newBuilder()
+                                .setOwnerId(tenant.getParentTenantId())
+                                .setType(Type.VEDA).build();
+
+                        CredentialMetadata parentMetadata = credentialStoreService.getCredential(cR);
+                        tenant = tenant.toBuilder().setParentClientId(parentMetadata.getId()).build();
+                    }
+
+                    tenant = tenant.toBuilder().setClientId(metadata.getId()).build();
+                    tenantList.add(tenant);
+                }
+
+                response = response.toBuilder().clearTenant().addAllTenant(tenantList).build();
+            }
+            return response;
+
+        } catch (Exception ex) {
+            String msg = "Error occurred at getAllTenants " + ex.getMessage();
+            LOGGER.error(msg, ex);
+            throw new InternalServerException(msg, ex);
+        }
+    }
+
+    public GetAllTenantsResponse getChildTenants(GetTenantsRequest request) {
+        try {
+            GetAllTenantsResponse response = tenantProfileService.getAllTenants(request);
+            if (response != null && !response.getTenantList().isEmpty()) {
+                List<Tenant> tenantList = new ArrayList<>();
+
+                for (Tenant tenant : response.getTenantList()) {
+                    GetCredentialRequest credentialRequest = GetCredentialRequest.newBuilder()
+                            .setOwnerId(tenant.getTenantId())
+                            .setType(Type.VEDA).build();
+
+                    CredentialMetadata metadata = credentialStoreService.getCredential(credentialRequest);
+                    if (tenant.getParentTenantId() > 0) {
+                        GetCredentialRequest cR = GetCredentialRequest.newBuilder()
+                                .setOwnerId(tenant.getParentTenantId())
+                                .setType(Type.VEDA)
+                                .build();
+
+                        CredentialMetadata parentMetadata = credentialStoreService.getCredential(cR);
+                        tenant = tenant.toBuilder().setParentClientId(parentMetadata.getId()).build();
+                    }
+
+                    tenant = tenant.toBuilder().setClientId(metadata.getId()).build();
+                    tenantList.add(tenant);
+                }
+                response = response.toBuilder().clearTenant().addAllTenant(tenantList).build();
+            }
+            return response;
+
+        } catch (Exception ex) {
+            String msg = "Error occurred at getChildTenants " + ex.getMessage();
+            LOGGER.error(msg);
+            throw new InternalServerException(msg, ex);
+        }
+    }
+
+    public GetAllTenantsForUserResponse getAllTenantsForUser(GetAllTenantsForUserRequest request) {
+        try {
+            return tenantProfileService.getAllTenantsForUser(request);
+        } catch (Exception ex) {
+            String msg = "Error occurred at getAllTenantsForUser " + ex.getMessage();
+            LOGGER.error(msg, ex);
+            throw new InternalServerException(msg, ex);
+        }
+    }
+
+    public com.veda.central.core.federated.authentication.api.Status addToCache(CacheManipulationRequest request) {
+        try {
+            LOGGER.debug("Request received to add to cache for tenant  " + request.getTenantId());
+            return federatedAuthenticationService.addToCache(request);
+
+        } catch (Exception ex) {
+            String msg = "Error occurred calling addToCache method for tenant  " + request.getTenantId() + " reason :" + ex.getMessage();
+            LOGGER.error(msg, ex);
+            throw new InternalServerException(msg, ex);
+        }
+    }
+
+    public com.veda.central.core.federated.authentication.api.Status removeFromCache(CacheManipulationRequest request) {
+        try {
+            LOGGER.debug("Request received to removeFromCache for tenant  " + request.getTenantId());
+            return federatedAuthenticationService.removeFromCache(request);
+
+        } catch (Exception ex) {
+            String msg = "Error occurred calling removeFromCache method for tenant  " + request.getTenantId() + " reason :" + ex.getMessage();
+            LOGGER.error(msg, ex);
+            throw new InternalServerException(msg, ex);
+        }
+    }
+
+    public GetInstitutionsResponse getFromCache(CacheManipulationRequest request) {
+        try {
+            LOGGER.debug("Request received to getFromCache for tenant  " + request.getTenantId());
+            return federatedAuthenticationService.getFromCache(request);
+
+        } catch (Exception ex) {
+            String msg = "Error occurred calling getFromCache method for tenant  " + request.getTenantId() + " reason :" + ex.getMessage();
+            LOGGER.error(msg, ex);
+            throw new InternalServerException(msg, ex);
+        }
+    }
+
+    public GetInstitutionsResponse getInstitutions(CacheManipulationRequest request) {
+        try {
+            LOGGER.debug("Request received to getInstitutions for tenant  " + request.getTenantId());
+            return federatedAuthenticationService.getInstitutions(request);
+
+        } catch (Exception ex) {
+            String msg = "Error occurred calling getInstitutions method for tenant  " + request.getTenantId() + " reason :" + ex.getMessage();
+            LOGGER.error(msg, ex);
+            throw new InternalServerException(msg, ex);
+        }
+    }
+
+    public GetStatusUpdateAuditTrailResponse getTenantStatusUpdateAuditTrail(GetAuditTrailRequest request) {
+        return tenantProfileService.getTenantStatusUpdateAuditTrail(request);
+    }
+
+    public GetAttributeUpdateAuditTrailResponse getTenantAttributeUpdateAuditTrail(GetAuditTrailRequest request) {
+        return tenantProfileService.getTenantAttributeUpdateAuditTrail(request);
     }
 
     private UserProfile convertToProfile(UserRepresentation representation) {

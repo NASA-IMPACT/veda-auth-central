@@ -27,4 +27,8 @@ public class UnauthorizedException extends RuntimeException {
     public UnauthorizedException(String msg, Throwable throwable) {
         super(msg, throwable);
     }
+
+    public UnauthorizedException(String message) {
+        super(message);
+    }
 }
