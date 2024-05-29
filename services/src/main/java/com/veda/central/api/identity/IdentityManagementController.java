@@ -39,8 +39,13 @@ import com.veda.central.service.auth.AuthClaim;
 import com.veda.central.service.auth.TokenAuthorizer;
 import com.veda.central.service.management.IdentityManagementService;
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.media.ArraySchema;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.media.SchemaProperty;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.tags.Tag;
-import jakarta.validation.Valid;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
@@ -50,9 +55,11 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.server.ResponseStatusException;
 
+import java.util.Map;
 import java.util.Optional;
 
 @RestController
@@ -72,7 +79,48 @@ public class IdentityManagementController {
     @Operation(
             summary = "User Authentication",
             description = "Authenticates the user by verifying the provided request credentials. If authenticated successfully, " +
-                    "returns an AuthToken which includes authentication details and associated claims."
+                    "returns an AuthToken which includes authentication details and associated claims.",
+            requestBody = @io.swagger.v3.oas.annotations.parameters.RequestBody(
+                    required = true,
+                    content = @Content(
+                            schemaProperties = {
+                                    @SchemaProperty(
+                                            name = "username",
+                                            schema = @Schema(
+                                                    type = "string",
+                                                    description = "The user's username"
+                                            )
+                                    ),
+                                    @SchemaProperty(
+                                            name = "password",
+                                            schema = @Schema(
+                                                    type = "string",
+                                                    description = "The user's password"
+                                            )
+                                    )
+                            }
+                    )
+            ),
+            responses = @io.swagger.v3.oas.annotations.responses.ApiResponse(
+                    content = @Content(
+                            schemaProperties = {
+                                    @SchemaProperty(
+                                            name = "access_token",
+                                            schema = @Schema(
+                                                    type = "string",
+                                                    description = "Access Token"
+                                            )
+                                    ),
+                                    @SchemaProperty(
+                                            name = "claims",
+                                            array = @ArraySchema(
+                                                    schema = @Schema(implementation = Claim.class),
+                                                    arraySchema = @Schema(description = "List of Claims")
+                                            )
+                                    )
+                            }
+                    )
+            )
     )
     public ResponseEntity<AuthToken> authenticate(@RequestBody AuthenticationRequest request, @RequestHeader HttpHeaders headers) {
         Optional<AuthClaim> claim = tokenAuthorizer.authorize(headers);
@@ -93,20 +141,43 @@ public class IdentityManagementController {
     @PostMapping("/authenticate/status")
     @Operation(
             summary = "Authentication Status Check",
-            description = "Checks the authentication status based on the provided AuthToken. Returns an IsAuthenticatedResponse portraying the status."
+            description = "Checks the authentication status based on the provided AuthToken. Returns an IsAuthenticatedResponse portraying the status.",
+            requestBody = @io.swagger.v3.oas.annotations.parameters.RequestBody(
+                    required = true,
+                    content = @Content(
+                            schemaProperties = {
+                                    @SchemaProperty(
+                                            name = "access_token",
+                                            schema = @Schema(
+                                                    type = "string",
+                                                    description = "Access Token"
+                                            )
+                                    ),
+                                    @SchemaProperty(
+                                            name = "claims",
+                                            array = @ArraySchema(
+                                                    schema = @Schema(implementation = Claim.class),
+                                                    arraySchema = @Schema(description = "List of Claims")
+                                            )
+                                    )
+                            }
+                    )
+            )
     )
-    public ResponseEntity<IsAuthenticatedResponse> isAuthenticated(@RequestBody AuthToken request, @RequestHeader HttpHeaders headers) {
+    public ResponseEntity<Boolean> isAuthenticated(@RequestBody AuthToken request, @RequestHeader HttpHeaders headers) {
         IsAuthenticatedResponse response = identityManagementService.isAuthenticated(generateAuthTokenRequest(request.toBuilder(), headers).build());
-        return ResponseEntity.ok(response);
+        return ResponseEntity.ok(response.getAuthenticated());
     }
 
     @GetMapping("/user")
     @Operation(
             summary = "Retrieve User Information",
-            description = "Retrieves User Information using the provided AuthToken. Returns a User object containing user details."
+            description = "Retrieves User Information using the provided access token. Returns a User object containing user details."
     )
-    public ResponseEntity<User> getUser(@RequestBody AuthToken request, @RequestHeader HttpHeaders headers) {
-        User response = identityManagementService.getUser(generateAuthTokenRequest(request.toBuilder(), headers).build());
+    public ResponseEntity<User> getUser(@Parameter(description = "Access Token used for authentication", required = true)
+                                        @RequestParam("access_token") String accessToken, @RequestHeader HttpHeaders headers) {
+        AuthToken.Builder builder = AuthToken.newBuilder().setAccessToken(accessToken);
+        User response = identityManagementService.getUser(generateAuthTokenRequest(builder, headers).build());
         return ResponseEntity.ok(response);
     }
 
@@ -114,20 +185,46 @@ public class IdentityManagementController {
     @Operation(
             summary = "Get User Management Service Account Access Token",
             description = "Retrieves the User Management Service Account Access Token using the provided GetUserManagementSATokenRequest. " +
-                    "Returns an AuthToken for the user management service account."
+                    "Returns an AuthToken for the user management service account.",
+            responses = @io.swagger.v3.oas.annotations.responses.ApiResponse(
+                    content = @Content(
+                            schemaProperties = {
+                                    @SchemaProperty(
+                                            name = "access_token",
+                                            schema = @Schema(
+                                                    type = "string",
+                                                    description = "Access Token"
+                                            )
+                                    ),
+                                    @SchemaProperty(
+                                            name = "claims",
+                                            array = @ArraySchema(
+                                                    schema = @Schema(implementation = Claim.class),
+                                                    arraySchema = @Schema(description = "List of Claims")
+                                            )
+                                    )
+                            }
+                    )
+            )
     )
-    public ResponseEntity<AuthToken> getUserManagementServiceAccountAccessToken(@Valid @RequestBody GetUserManagementSATokenRequest request, @RequestHeader HttpHeaders headers) {
+    public ResponseEntity<AuthToken> getUserManagementServiceAccountAccessToken(
+            @RequestParam(value = "client_id", required = false) String clientId,
+            @RequestParam(value = "client_secret", required = false) String clientSecret,
+            @RequestParam(value = "tenant_id", required = false) String tenantId,
+            @RequestHeader HttpHeaders headers) {
+
         Optional<AuthClaim> claim = tokenAuthorizer.authorize(headers);
+        GetUserManagementSATokenRequest.Builder builder = GetUserManagementSATokenRequest.newBuilder();
         if (claim.isPresent()) {
             AuthClaim authClaim = claim.get();
-            request = request.toBuilder().setTenantId(authClaim.getTenantId())
+            builder.setTenantId(authClaim.getTenantId())
                     .setClientId(authClaim.getIamAuthId())
-                    .setClientSecret(authClaim.getIamAuthSecret()).build();
+                    .setClientSecret(authClaim.getIamAuthSecret());
         } else {
             throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Request is not authorized");
         }
 
-        AuthToken response = identityManagementService.getUserManagementServiceAccountAccessToken(request);
+        AuthToken response = identityManagementService.getUserManagementServiceAccountAccessToken(builder.build());
         return ResponseEntity.ok(response);
     }
 
@@ -135,10 +232,33 @@ public class IdentityManagementController {
     @Operation(
             summary = "End User Session",
             description = "Ends the user session based on the provided EndSessionRequest. " +
-                    "Returns an OperationStatus response confirming the action."
+                    "Returns an OperationStatus response confirming the action.",
+            requestBody = @io.swagger.v3.oas.annotations.parameters.RequestBody(
+                    required = true,
+                    content = @Content(
+                            mediaType = "application/json",
+                            schemaProperties = {
+                                    @SchemaProperty(
+                                            name = "refresh_token",
+                                            schema = @Schema(
+                                                    type = "string",
+                                                    description = "Refresh Token"
+                                            )
+                                    )
+                            }
+                    )
+            ),
+            responses = {
+                    @ApiResponse(responseCode = "200", description = "Successful operation", content = @Content(schema = @Schema(implementation = Boolean.class))),
+                    @ApiResponse(responseCode = "400", description = "Invalid request")
+            }
     )
-    public ResponseEntity<OperationStatus> endUserSession(@RequestBody EndSessionRequest request, @RequestHeader HttpHeaders headers) {
+    public ResponseEntity<Boolean> endUserSession(@RequestBody Map<String, String> requestData, @RequestHeader HttpHeaders headers) {
         Optional<AuthClaim> claim = tokenAuthorizer.authorize(headers);
+        String refreshToken = requestData.get("refresh_token");
+        if (refreshToken == null || refreshToken.isBlank()) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Missing or empty refresh_token");
+        }
 
         if (claim.isPresent()) {
             AuthClaim authClaim = claim.get();
@@ -146,22 +266,37 @@ public class IdentityManagementController {
                     .setTenantId(authClaim.getTenantId())
                     .setClientId(authClaim.getIamAuthId())
                     .setClientSecret(authClaim.getIamAuthSecret())
+                    .setRefreshToken(refreshToken)
                     .build();
-            request = request.toBuilder().setBody(endSessionRequest).build();
+            EndSessionRequest request = EndSessionRequest.newBuilder().setBody(endSessionRequest).build();
+            OperationStatus response = identityManagementService.endUserSession(request);
+
+            return ResponseEntity.ok(response.getStatus());
+
         } else {
             throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Request is not authorized");
         }
-
-        OperationStatus response = identityManagementService.endUserSession(request);
-        return ResponseEntity.ok(response);
     }
 
     @GetMapping("/authorize")
     @Operation(
             summary = "Authorize User",
-            description = "Authorizes the user by verifying the provided AuthorizationRequest. If authorized, an AuthorizationResponse is returned."
+            description = "Authorizes the user by verifying the provided AuthorizationRequest. If authorized, an AuthorizationResponse is returned.",
+            responses = {
+                    @ApiResponse(responseCode = "200", description = "Successful operation", content = @Content(schema = @Schema(implementation = Boolean.class))),
+                    @ApiResponse(responseCode = "400", description = "Invalid request")
+            }
     )
-    public ResponseEntity<AuthorizationResponse> authorize(@RequestBody AuthorizationRequest request) {
+    public ResponseEntity<AuthorizationResponse> authorize(
+            @RequestParam(value = "client_id") String clientId,
+            @RequestParam(value = "redirect_uri") String redirectUri,
+            @RequestParam(value = "tenant_id", required = false) int tenantId) {
+
+        AuthorizationRequest request = AuthorizationRequest.newBuilder()
+                .setClientId(clientId)
+                .setRedirectUri(redirectUri)
+                .setTenantId(tenantId)
+                .build();
         AuthorizationResponse response = identityManagementService.authorize(request);
         return ResponseEntity.ok(response);
     }
