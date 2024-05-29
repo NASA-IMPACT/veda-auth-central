@@ -245,8 +245,7 @@ public class IdentityService {
                         keycloakAuthClient.getAccessTokenFromRefreshTokenGrantType(clientId, clientSecret, tenantId, request.getRefreshToken());
                 case Constants.CLIENT_CREDENTIALS ->
                         keycloakAuthClient.getAccessTokenFromClientCredentialsGrantType(clientId, clientSecret, tenantId);
-                default ->
-                        keycloakAuthClient.getAccessToken(clientId, clientSecret, tenantId, request.getCode(), request.getRedirectUri());
+                default -> keycloakAuthClient.getAccessToken(clientId, clientSecret, tenantId, request.getCode(), request.getRedirectUri());
             };
 
             try {
@@ -299,6 +298,47 @@ public class IdentityService {
                     .addAllScopesSupported(jsonArrayToList(object.getJSONArray("scopes_supported")))
                     .addAllTokenEndpointAuthMethodsSupported(jsonArrayToList(object.getJSONArray("token_endpoint_auth_methods_supported")))
                     .addAllClaimsSupported(jsonArrayToList(object.getJSONArray("claims_supported")))
+                    .addAllIntrospectionEndpointAuthSigningAlgValuesSupported(jsonArrayToList(object.getJSONArray("introspection_endpoint_auth_signing_alg_values_supported")))
+                    .setRequestParameterSupported(object.optBoolean("request_parameter_supported"))
+                    .setPushedAuthorizationRequestEndpoint(object.optString("pushed_authorization_request_endpoint"))
+                    .setIntrospectionEndpoint(object.optString("introspection_endpoint"))
+                    .setClaimsParameterSupported(object.optBoolean("claims_parameter_supported"))
+                    .addAllIdTokenEncryptionEncValuesSupported(jsonArrayToList(object.getJSONArray("id_token_encryption_enc_values_supported")))
+                    .addAllUserinfoEncryptionEncValuesSupported(jsonArrayToList(object.getJSONArray("userinfo_encryption_enc_values_supported")))
+                    .addAllIntrospectionEndpointAuthMethodsSupported(jsonArrayToList(object.getJSONArray("introspection_endpoint_auth_methods_supported")))
+                    .addAllAuthorizationEncryptionAlgValuesSupported(jsonArrayToList(object.getJSONArray("authorization_encryption_alg_values_supported")))
+                    .setTlsClientCertificateBoundAccessTokens(object.optBoolean("tls_client_certificate_bound_access_tokens"))
+                    .addAllResponseModesSupported(jsonArrayToList(object.getJSONArray("response_modes_supported")))
+                    .setBackchannelLogoutSessionSupported(object.optBoolean("backchannel_logout_session_supported"))
+                    .addAllBackchannelAuthenticationRequestSigningAlgValuesSupported(jsonArrayToList(object.getJSONArray("backchannel_authentication_request_signing_alg_values_supported")))
+                    .addAllAuthorizationEncryptionEncValuesSupported(jsonArrayToList(object.getJSONArray("authorization_encryption_enc_values_supported")))
+                    .addAllRevocationEndpointAuthSigningAlgValuesSupported(jsonArrayToList(object.getJSONArray("revocation_endpoint_auth_signing_alg_values_supported")))
+                    .addAllBackchannelTokenDeliveryModesSupported(jsonArrayToList(object.getJSONArray("backchannel_token_delivery_modes_supported")))
+                    .addAllRevocationEndpointAuthMethodsSupported(jsonArrayToList(object.getJSONArray("revocation_endpoint_auth_methods_supported")))
+                    .setRequestUriParameterSupported(object.optBoolean("request_uri_parameter_supported"))
+                    .addAllGrantTypesSupported(jsonArrayToList(object.getJSONArray("grant_types_supported")))
+                    .setRequireRequestUriRegistration(object.optBoolean("require_request_uri_registration"))
+                    .addAllCodeChallengeMethodsSupported(jsonArrayToList(object.getJSONArray("code_challenge_methods_supported")))
+                    .addAllIdTokenEncryptionAlgValuesSupported(jsonArrayToList(object.getJSONArray("id_token_encryption_alg_values_supported")))
+                    .setFrontchannelLogoutSessionSupported(object.optBoolean("frontchannel_logout_session_supported"))
+                    .addAllAuthorizationSigningAlgValuesSupported(jsonArrayToList(object.getJSONArray("authorization_signing_alg_values_supported")))
+                    .addAllRequestObjectSigningAlgValuesSupported(jsonArrayToList(object.getJSONArray("request_object_signing_alg_values_supported")))
+                    .addAllRequestObjectEncryptionAlgValuesSupported(jsonArrayToList(object.getJSONArray("request_object_encryption_alg_values_supported")))
+                    .setCheckSessionIframe(object.optString("check_session_iframe"))
+                    .setBackchannelLogoutSupported(object.optBoolean("backchannel_logout_supported"))
+                    .addAllAcrValuesSupported(jsonArrayToList(object.getJSONArray("acr_values_supported")))
+                    .addAllRequestObjectEncryptionEncValuesSupported(jsonArrayToList(object.getJSONArray("request_object_encryption_enc_values_supported")))
+                    .setDeviceAuthorizationEndpoint(object.optString("device_authorization_endpoint"))
+                    .addAllUserinfoSigningAlgValuesSupported(jsonArrayToList(object.getJSONArray("userinfo_signing_alg_values_supported")))
+                    .setRequirePushedAuthorizationRequests(object.optBoolean("require_pushed_authorization_requests"))
+                    .addAllClaimTypesSupported(jsonArrayToList(object.getJSONArray("claim_types_supported")))
+                    .addAllUserinfoEncryptionAlgValuesSupported(jsonArrayToList(object.getJSONArray("userinfo_encryption_alg_values_supported")))
+                    .setEndSessionEndpoint(object.optString("end_session_endpoint"))
+                    .setRevocationEndpoint(object.optString("revocation_endpoint"))
+                    .setBackchannelAuthenticationEndpoint(object.optString("backchannel_authentication_endpoint"))
+                    .setFrontchannelLogoutSupported(object.optBoolean("frontchannel_logout_supported"))
+                    .addAllTokenEndpointAuthSigningAlgValuesSupported(jsonArrayToList(object.getJSONArray("token_endpoint_auth_signing_alg_values_supported")))
+                    .setRegistrationEndpoint(object.optString("registration_endpoint"))
                     .build();
 
         } catch (Exception ex) {

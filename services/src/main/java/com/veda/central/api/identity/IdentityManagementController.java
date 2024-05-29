@@ -449,10 +449,9 @@ public class IdentityManagementController {
                     @ApiResponse(responseCode = "500", description = "Internal Server Error", content = @Content())
             }
     )
-    public ResponseEntity<OIDCConfiguration> getOIDCConfiguration(@RequestParam(value = "client_id") String clientId, @RequestParam(value = "tenant_id", required = false) int tenantId) {
+    public ResponseEntity<OIDCConfiguration> getOIDCConfiguration(@RequestParam(value = "client_id") String clientId) {
         GetOIDCConfiguration request = GetOIDCConfiguration.newBuilder()
                 .setClientId(clientId)
-                .setTenantId(tenantId)
                 .build();
         OIDCConfiguration response = identityManagementService.getOIDCConfiguration(request);
         return ResponseEntity.ok(response);
