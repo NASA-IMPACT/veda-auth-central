@@ -69,6 +69,7 @@ import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 /**
  * The UserManagementService class provides methods for managing user registration, enabling and disabling users, and adding and deleting user attributes.
@@ -1321,6 +1322,10 @@ public class UserManagementService {
             LOGGER.error(msg, ex);
             throw new InternalServerException(msg, ex);
         }
+    }
+
+    public Map<String, Object> getUserInfo(String accessToken, long tenantId) {
+        return iamAdminService.getUserInfo(accessToken, tenantId);
     }
 
     private UserProfile convertToProfile(UserRepresentation representation) {

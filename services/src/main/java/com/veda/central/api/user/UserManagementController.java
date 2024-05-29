@@ -36,6 +36,7 @@ import com.veda.central.core.iam.api.RegisterUserResponse;
 import com.veda.central.core.iam.api.RegisterUsersRequest;
 import com.veda.central.core.iam.api.RegisterUsersResponse;
 import com.veda.central.core.iam.api.ResetUserPassword;
+import com.veda.central.core.iam.api.UserAttribute;
 import com.veda.central.core.iam.api.UserRepresentation;
 import com.veda.central.core.iam.api.UserSearchRequest;
 import com.veda.central.core.identity.api.AuthToken;
@@ -50,6 +51,11 @@ import com.veda.central.service.auth.AuthClaim;
 import com.veda.central.service.auth.TokenAuthorizer;
 import com.veda.central.service.management.UserManagementService;
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.media.ArraySchema;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.media.SchemaProperty;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import org.apache.commons.lang3.StringUtils;
@@ -63,9 +69,11 @@ import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.server.ResponseStatusException;
 
+import java.util.Map;
 import java.util.Optional;
 
 @RestController
@@ -89,22 +97,32 @@ public class UserManagementController {
                     "Upon successful registration, the system generates a unique identifier for the user and returns a " +
                     "RegisterUserResponse enriched with this identifier and other details. Any violation of the user " +
                     "registration policy (e.g., registering with an already existing username) will be handled according " +
-                    "to the application's error handling protocol."
+                    "to the application's error handling protocol.",
+
+            responses = {
+                    @ApiResponse(responseCode = "200", description = "Successful operation", content = @Content(schema = @Schema(implementation = RegisterUserResponse.class))),
+                    @ApiResponse(responseCode = "401", description = "Unauthorized Request", content = @Content()),
+                    @ApiResponse(responseCode = "500", description = "Internal Server Error", content = @Content())
+            }
     )
-    public ResponseEntity<RegisterUserResponse> registerUser(@RequestBody RegisterUserRequest request, @RequestHeader HttpHeaders headers) {
-        Optional<AuthClaim> claim = tokenAuthorizer.authorize(headers, request.getClientId());
+    public ResponseEntity<RegisterUserResponse> registerUser(@RequestParam(value = "client_id", required = false) String clientId, @RequestBody UserRepresentation requestData, @RequestHeader HttpHeaders headers) {
+        Optional<AuthClaim> claim = tokenAuthorizer.authorize(headers, clientId);
 
         if (claim.isPresent()) {
             AuthClaim authClaim = claim.get();
 
-            request = request.toBuilder().setTenantId(authClaim.getTenantId())
+            RegisterUserRequest request = RegisterUserRequest.newBuilder()
+                    .setTenantId(authClaim.getTenantId())
                     .setClientId(authClaim.getIamAuthId())
-                    .setClientSec(authClaim.getIamAuthSecret()).build();
+                    .setClientSec(authClaim.getIamAuthSecret())
+                    .setUser(requestData)
+                    .build();
+            RegisterUserResponse response = userManagementService.registerUser(request);
+            return ResponseEntity.ok(response);
+
         } else {
             throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Request is not authorized");
         }
-        RegisterUserResponse response = userManagementService.registerUser(request);
-        return ResponseEntity.ok(response);
     }
 
     @PostMapping("/users")
@@ -115,11 +133,31 @@ public class UserManagementController {
                     "Each entity should have the necessary user information such as username, email, etc. " +
                     "Upon successful registration and enablement, the system generates unique identifiers for the users and returns a " +
                     "RegisterUsersResponse with a boolean indicating all the users got registered. " +
-                    "If it false then the response will contain the user representations of the failed users.."
+                    "If it false then the response will contain the user representations of the failed users.",
+
+            requestBody = @io.swagger.v3.oas.annotations.parameters.RequestBody(
+                    required = true,
+                    content = @Content(
+                            schemaProperties = {
+                                    @SchemaProperty(
+                                            name = "users",
+                                            array = @ArraySchema(
+                                                    schema = @Schema(implementation = UserRepresentation.class),
+                                                    arraySchema = @Schema(description = "List of Users")
+                                            )
+                                    )
+                            }
+                    )
+            ),
+            responses = {
+                    @ApiResponse(responseCode = "200", description = "Successful operation", content = @Content(schema = @Schema(implementation = RegisterUsersResponse.class))),
+                    @ApiResponse(responseCode = "401", description = "Unauthorized Request", content = @Content()),
+                    @ApiResponse(responseCode = "500", description = "Internal Server Error", content = @Content())
+            }
     )
-    public ResponseEntity<RegisterUsersResponse> registerAndEnableUsers(@RequestBody RegisterUsersRequest request, @RequestHeader HttpHeaders headers) {
-        headers = attachUserToken(headers, request.getClientId());
-        Optional<AuthClaim> claim = tokenAuthorizer.authorize(headers, request.getClientId());
+    public ResponseEntity<RegisterUsersResponse> registerAndEnableUsers(@RequestParam(value = "client_id") String clientId, @RequestBody RegisterUsersRequest request, @RequestHeader HttpHeaders headers) {
+        headers = attachUserToken(headers, clientId);
+        Optional<AuthClaim> claim = tokenAuthorizer.authorize(headers, clientId);
 
         if (claim.isPresent()) {
             Optional<String> userTokenOp = tokenAuthorizer.getUserTokenFromUserTokenHeader(headers);
@@ -147,11 +185,39 @@ public class UserManagementController {
             description = "This operation allows adding custom attributes to an existing user. " +
                     "The AddUserAttributesRequest should specify the user and the attributes to add. " +
                     "Upon successful execution, the system adds the new attributes to the user profile and returns an " +
-                    "OperationStatus representing the result."
+                    "OperationStatus representing the result.",
+
+            requestBody = @io.swagger.v3.oas.annotations.parameters.RequestBody(
+                    required = true,
+                    content = @Content(
+                            schemaProperties = {
+                                    @SchemaProperty(
+                                            name = "users",
+                                            array = @ArraySchema(
+                                                    schema = @Schema(implementation = String.class),
+                                                    arraySchema = @Schema(description = "List of User Names")
+                                            )
+                                    ),
+                                    @SchemaProperty(
+                                            name = "attributes",
+                                            array = @ArraySchema(
+                                                    schema = @Schema(implementation = UserAttribute.class),
+                                                    arraySchema = @Schema(description = "List of User Attributes")
+                                            )
+                                    )
+                            }
+                    )
+            ),
+
+            responses = {
+                    @ApiResponse(responseCode = "200", description = "Successful operation", content = @Content(schema = @Schema(implementation = OperationStatus.class))),
+                    @ApiResponse(responseCode = "401", description = "Unauthorized Request", content = @Content()),
+                    @ApiResponse(responseCode = "500", description = "Internal Server Error", content = @Content())
+            }
     )
-    public ResponseEntity<OperationStatus> addUserAttributes(@RequestBody AddUserAttributesRequest request, @RequestHeader HttpHeaders headers) {
-        headers = attachUserToken(headers, request.getClientId());
-        Optional<AuthClaim> claim = tokenAuthorizer.authorize(headers, request.getClientId());
+    public ResponseEntity<OperationStatus> addUserAttributes(@RequestParam(value = "client_id") String clientId, @RequestBody AddUserAttributesRequest request, @RequestHeader HttpHeaders headers) {
+        headers = attachUserToken(headers, clientId);
+        Optional<AuthClaim> claim = tokenAuthorizer.authorize(headers, clientId);
 
         if (claim.isPresent()) {
             AuthClaim authClaim = claim.get();
@@ -639,6 +705,22 @@ public class UserManagementController {
     public ResponseEntity<OperationStatus> synchronizeUserDBs(@Valid @RequestBody SynchronizeUserDBRequest request) {
         OperationStatus response = userManagementService.synchronizeUserDBs(request);
         return ResponseEntity.ok(response);
+    }
+
+    @GetMapping("/userinfo")
+    @Operation(
+            summary = "Retrieve User Info"
+    )
+    public ResponseEntity<Object> userInfo(@RequestParam("access_token") String accessToken, @RequestHeader HttpHeaders headers) {
+        Optional<AuthClaim> claim = tokenAuthorizer.authorize(headers);
+
+        if (claim.isPresent()) {
+            Map<String, Object> userInfo = userManagementService.getUserInfo(accessToken, claim.get().getTenantId());
+            return ResponseEntity.ok(userInfo);
+
+        } else {
+            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Request is not authorized");
+        }
     }
 
     private HttpHeaders attachUserToken(HttpHeaders headers, String clientId) {
