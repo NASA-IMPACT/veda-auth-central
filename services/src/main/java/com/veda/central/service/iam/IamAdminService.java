@@ -19,6 +19,7 @@
 
 package com.veda.central.service.iam;
 
+import com.veda.central.api.exception.UnauthorizedException;
 import com.veda.central.core.commons.StatusUpdater;
 import com.veda.central.core.constants.Constants;
 import com.veda.central.core.iam.api.AddExternalIDPLinksRequest;
@@ -71,7 +72,6 @@ import com.veda.central.core.model.commons.OperationStatus;
 import com.veda.central.core.model.commons.StatusEntity;
 import com.veda.central.service.federated.client.keycloak.KeycloakClient;
 import com.veda.central.service.federated.client.keycloak.KeycloakClientSecret;
-import com.veda.central.service.federated.client.keycloak.UnauthorizedException;
 import jakarta.persistence.EntityNotFoundException;
 import org.apache.commons.lang3.StringUtils;
 import org.keycloak.representations.idm.EventRepresentation;

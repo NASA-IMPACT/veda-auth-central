@@ -19,8 +19,10 @@
 
 package com.veda.central.api;
 
+import com.veda.central.api.exception.UnauthorizedException;
 import com.veda.central.service.exceptions.AuthenticationException;
 import com.veda.central.service.exceptions.InternalServerException;
+import jakarta.persistence.EntityNotFoundException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
@@ -47,6 +49,30 @@ public class GlobalExceptionHandler {
         return ResponseEntity
                 .status(HttpStatus.INTERNAL_SERVER_ERROR)
                 .body(ex.getMessage());
+    }
+
+    @ExceptionHandler(IllegalArgumentException.class)
+    public ResponseEntity<String> handleIllegalArgumentException(IllegalArgumentException ex) {
+        logger.error("Illegal argument error: ", ex);
+        return ResponseEntity
+                .status(HttpStatus.BAD_REQUEST)
+                .body(ex.getMessage());
+    }
+
+    @ExceptionHandler(EntityNotFoundException.class)
+    public ResponseEntity<String> handleEntityNotFoundException(EntityNotFoundException ex) {
+        logger.error("Entity not found: ", ex);
+        return ResponseEntity
+                .status(HttpStatus.NOT_FOUND)
+                .body(ex.getMessage());
+    }
+
+    @ExceptionHandler(UnauthorizedException.class)
+    public ResponseEntity<String> handleUnauthorizedExceptions(UnauthorizedException ex) {
+        logger.error("Unauthorized exception: ", ex);
+        return ResponseEntity
+                .status(HttpStatus.UNAUTHORIZED)
+                .body("Unauthorized: " + ex.getMessage());
     }
 
     @ExceptionHandler(Exception.class)

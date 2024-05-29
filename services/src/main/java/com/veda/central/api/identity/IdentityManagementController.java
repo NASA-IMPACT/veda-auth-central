@@ -101,26 +101,33 @@ public class IdentityManagementController {
                             }
                     )
             ),
-            responses = @io.swagger.v3.oas.annotations.responses.ApiResponse(
-                    content = @Content(
-                            schemaProperties = {
-                                    @SchemaProperty(
-                                            name = "access_token",
-                                            schema = @Schema(
-                                                    type = "string",
-                                                    description = "Access Token"
+            responses = {
+                    @io.swagger.v3.oas.annotations.responses.ApiResponse(
+                            responseCode = "200",
+                            description = "Successful operation",
+                            content = @Content(
+                                    schemaProperties = {
+                                            @SchemaProperty(
+                                                    name = "access_token",
+                                                    schema = @Schema(
+                                                            type = "string",
+                                                            description = "Access Token"
+                                                    )
+                                            ),
+                                            @SchemaProperty(
+                                                    name = "claims",
+                                                    array = @ArraySchema(
+                                                            schema = @Schema(implementation = Claim.class),
+                                                            arraySchema = @Schema(description = "List of Claims")
+                                                    )
                                             )
-                                    ),
-                                    @SchemaProperty(
-                                            name = "claims",
-                                            array = @ArraySchema(
-                                                    schema = @Schema(implementation = Claim.class),
-                                                    arraySchema = @Schema(description = "List of Claims")
-                                            )
-                                    )
-                            }
-                    )
-            )
+                                    }
+                            )
+                    ),
+                    @ApiResponse(responseCode = "200", description = "Successful operation", content = @Content(schema = @Schema(implementation = AuthToken.class))),
+                    @ApiResponse(responseCode = "401", description = "Unauthorized Request", content = @Content()),
+                    @ApiResponse(responseCode = "500", description = "Internal Server Error", content = @Content())
+            }
     )
     public ResponseEntity<AuthToken> authenticate(@RequestBody AuthenticationRequest request, @RequestHeader HttpHeaders headers) {
         Optional<AuthClaim> claim = tokenAuthorizer.authorize(headers);
@@ -162,7 +169,12 @@ public class IdentityManagementController {
                                     )
                             }
                     )
-            )
+            ),
+            responses = {
+                    @ApiResponse(responseCode = "200", description = "Successful operation", content = @Content(schema = @Schema(implementation = Boolean.class))),
+                    @ApiResponse(responseCode = "401", description = "Unauthorized Request", content = @Content()),
+                    @ApiResponse(responseCode = "500", description = "Internal Server Error", content = @Content())
+            }
     )
     public ResponseEntity<Boolean> isAuthenticated(@RequestBody AuthToken request, @RequestHeader HttpHeaders headers) {
         IsAuthenticatedResponse response = identityManagementService.isAuthenticated(generateAuthTokenRequest(request.toBuilder(), headers).build());
@@ -172,7 +184,12 @@ public class IdentityManagementController {
     @GetMapping("/user")
     @Operation(
             summary = "Retrieve User Information",
-            description = "Retrieves User Information using the provided access token. Returns a User object containing user details."
+            description = "Retrieves User Information using the provided access token. Returns a User object containing user details.",
+            responses = {
+                    @ApiResponse(responseCode = "200", description = "Successful operation", content = @Content(schema = @Schema(implementation = User.class))),
+                    @ApiResponse(responseCode = "401", description = "Unauthorized Request", content = @Content()),
+                    @ApiResponse(responseCode = "500", description = "Internal Server Error", content = @Content())
+            }
     )
     public ResponseEntity<User> getUser(@Parameter(description = "Access Token used for authentication", required = true)
                                         @RequestParam("access_token") String accessToken, @RequestHeader HttpHeaders headers) {
@@ -186,26 +203,33 @@ public class IdentityManagementController {
             summary = "Get User Management Service Account Access Token",
             description = "Retrieves the User Management Service Account Access Token using the provided GetUserManagementSATokenRequest. " +
                     "Returns an AuthToken for the user management service account.",
-            responses = @io.swagger.v3.oas.annotations.responses.ApiResponse(
-                    content = @Content(
-                            schemaProperties = {
-                                    @SchemaProperty(
-                                            name = "access_token",
-                                            schema = @Schema(
-                                                    type = "string",
-                                                    description = "Access Token"
+            responses = {
+                    @io.swagger.v3.oas.annotations.responses.ApiResponse(
+                            responseCode = "200",
+                            description = "Successful operation",
+                            content = @Content(
+                                    schemaProperties = {
+                                            @SchemaProperty(
+                                                    name = "access_token",
+                                                    schema = @Schema(
+                                                            type = "string",
+                                                            description = "Access Token"
+                                                    )
+                                            ),
+                                            @SchemaProperty(
+                                                    name = "claims",
+                                                    array = @ArraySchema(
+                                                            schema = @Schema(implementation = Claim.class),
+                                                            arraySchema = @Schema(description = "List of Claims")
+                                                    )
                                             )
-                                    ),
-                                    @SchemaProperty(
-                                            name = "claims",
-                                            array = @ArraySchema(
-                                                    schema = @Schema(implementation = Claim.class),
-                                                    arraySchema = @Schema(description = "List of Claims")
-                                            )
-                                    )
-                            }
-                    )
-            )
+                                    }
+                            )
+                    ),
+                    @ApiResponse(responseCode = "200", description = "Successful operation", content = @Content(schema = @Schema(implementation = AuthToken.class))),
+                    @ApiResponse(responseCode = "401", description = "Unauthorized Request", content = @Content()),
+                    @ApiResponse(responseCode = "500", description = "Internal Server Error", content = @Content())
+            }
     )
     public ResponseEntity<AuthToken> getUserManagementServiceAccountAccessToken(
             @RequestParam(value = "client_id", required = false) String clientId,
@@ -250,7 +274,8 @@ public class IdentityManagementController {
             ),
             responses = {
                     @ApiResponse(responseCode = "200", description = "Successful operation", content = @Content(schema = @Schema(implementation = Boolean.class))),
-                    @ApiResponse(responseCode = "400", description = "Invalid request")
+                    @ApiResponse(responseCode = "400", description = "Invalid request", content = @Content()),
+                    @ApiResponse(responseCode = "500", description = "Internal Server Error", content = @Content())
             }
     )
     public ResponseEntity<Boolean> endUserSession(@RequestBody Map<String, String> requestData, @RequestHeader HttpHeaders headers) {
@@ -283,8 +308,9 @@ public class IdentityManagementController {
             summary = "Authorize User",
             description = "Authorizes the user by verifying the provided AuthorizationRequest. If authorized, an AuthorizationResponse is returned.",
             responses = {
-                    @ApiResponse(responseCode = "200", description = "Successful operation", content = @Content(schema = @Schema(implementation = Boolean.class))),
-                    @ApiResponse(responseCode = "400", description = "Invalid request")
+                    @ApiResponse(responseCode = "200", description = "Successful operation", content = @Content(schema = @Schema(implementation = AuthorizationResponse.class))),
+                    @ApiResponse(responseCode = "400", description = "Invalid request", content = @Content()),
+                    @ApiResponse(responseCode = "500", description = "Internal Server Error", content = @Content())
             }
     )
     public ResponseEntity<AuthorizationResponse> authorize(
@@ -304,7 +330,59 @@ public class IdentityManagementController {
     @PostMapping(value = "/token", consumes = MediaType.APPLICATION_JSON_VALUE)
     @Operation(
             summary = "Get Token",
-            description = "Retrieves a token based on the provided GetTokenRequest. If successful, returns a TokenResponse."
+            description = "Retrieves a token based on the provided request. For basic authentication, use 'user_name' and 'password'; for authorization code grant flow, use 'code'. If successful, returns a TokenResponse.",
+            requestBody = @io.swagger.v3.oas.annotations.parameters.RequestBody(
+                    required = true,
+                    content = @Content(
+                            mediaType = "application/json",
+                            schemaProperties = {
+                                    @SchemaProperty(
+                                            name = "code",
+                                            schema = @Schema(
+                                                    type = "string",
+                                                    description = "Authorization Code",
+                                                    example = "wsxdcfvgbg"
+                                            )
+                                    ),
+                                    @SchemaProperty(
+                                            name = "redirect_uri",
+                                            schema = @Schema(
+                                                    type = "string",
+                                                    description = "Redirect URI",
+                                                    example = "https://domain/callback"
+                                            )
+                                    ),
+                                    @SchemaProperty(
+                                            name = "grant_type",
+                                            schema = @Schema(
+                                                    type = "string",
+                                                    description = "Grant Type",
+                                                    example = "authorization_code"
+                                            )
+                                    ),
+                                    @SchemaProperty(
+                                            name = "username",
+                                            schema = @Schema(
+                                                    type = "string",
+                                                    description = "User Name"
+                                            )
+                                    ),
+                                    @SchemaProperty(
+                                            name = "password",
+                                            schema = @Schema(
+                                                    type = "string",
+                                                    description = "User's password"
+                                            )
+                                    )
+                            }
+                    )
+            ),
+            responses = {
+                    @ApiResponse(responseCode = "200", description = "Successful operation", content = @Content(schema = @Schema(implementation = TokenResponse.class))),
+                    @ApiResponse(responseCode = "401", description = "Unauthorized Request", content = @Content()),
+                    @ApiResponse(responseCode = "404", description = "When the associated Tenant cannot be found", content = @Content()),
+                    @ApiResponse(responseCode = "500", description = "Internal Server Error", content = @Content())
+            }
     )
     public ResponseEntity<TokenResponse> token(@RequestBody GetTokenRequest request, @RequestHeader HttpHeaders headers) {
         // Expects the Base64 encoded value 'clientId:clientSecret' for Authorization Header
@@ -327,10 +405,16 @@ public class IdentityManagementController {
     @GetMapping("/credentials")
     @Operation(
             summary = "Get Credentials",
-            description = "Retrieves credentials based on the provided GetCredentialsRequest. Returns a Credentials object."
+            description = "Retrieves credentials based on the provided client_id. Returns a Credentials object.",
+            responses = {
+                    @ApiResponse(responseCode = "200", description = "Successful operation", content = @Content(schema = @Schema(implementation = Credentials.class))),
+                    @ApiResponse(responseCode = "400", description = "Invalid request", content = @Content()),
+                    @ApiResponse(responseCode = "401", description = "Unauthorized Request", content = @Content()),
+                    @ApiResponse(responseCode = "500", description = "Internal Server Error", content = @Content())
+            }
     )
-    public ResponseEntity<Credentials> getCredentials(@RequestBody GetCredentialsRequest request, @RequestHeader HttpHeaders headers) {
-        Optional<AuthClaim> claim = tokenAuthorizer.authorize(headers, request.getClientId());
+    public ResponseEntity<Credentials> getCredentials(@RequestParam(value = "client_id") String clientId, @RequestHeader HttpHeaders headers) {
+        Optional<AuthClaim> claim = tokenAuthorizer.authorize(headers, clientId);
 
         if (claim.isPresent()) {
             AuthClaim authClaim = claim.get();
@@ -344,22 +428,32 @@ public class IdentityManagementController {
                     .setIamClientId(authClaim.getIamAuthId())
                     .setIamClientSecret(authClaim.getIamAuthSecret())
                     .build();
-            request = request.toBuilder().setCredentials(credentials).build();
+            GetCredentialsRequest request = GetCredentialsRequest.newBuilder().setCredentials(credentials).build();
+            Credentials response = identityManagementService.getCredentials(request);
+            return ResponseEntity.ok(response);
+
         } else {
             throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Request is not authorized");
         }
-
-        Credentials response = identityManagementService.getCredentials(request);
-        return ResponseEntity.ok(response);
     }
 
     @GetMapping("/.well-known/openid-configuration")
     @Operation(
             summary = "Get OIDC Configuration",
             description = "Retrieves the OpenID Connect (OIDC) configuration using the provided GetOIDCConfiguration request. " +
-                    "Returns an OIDCConfiguration object."
+                    "Returns an OIDCConfiguration object.",
+            responses = {
+                    @ApiResponse(responseCode = "200", description = "Successful operation", content = @Content(schema = @Schema(implementation = OIDCConfiguration.class))),
+                    @ApiResponse(responseCode = "401", description = "Unauthorized Request", content = @Content()),
+                    @ApiResponse(responseCode = "404", description = "When the associated Tenant or Credentials cannot be found", content = @Content()),
+                    @ApiResponse(responseCode = "500", description = "Internal Server Error", content = @Content())
+            }
     )
-    public ResponseEntity<OIDCConfiguration> getOIDCConfiguration(@RequestBody GetOIDCConfiguration request) {
+    public ResponseEntity<OIDCConfiguration> getOIDCConfiguration(@RequestParam(value = "client_id") String clientId, @RequestParam(value = "tenant_id", required = false) int tenantId) {
+        GetOIDCConfiguration request = GetOIDCConfiguration.newBuilder()
+                .setClientId(clientId)
+                .setTenantId(tenantId)
+                .build();
         OIDCConfiguration response = identityManagementService.getOIDCConfiguration(request);
         return ResponseEntity.ok(response);
     }

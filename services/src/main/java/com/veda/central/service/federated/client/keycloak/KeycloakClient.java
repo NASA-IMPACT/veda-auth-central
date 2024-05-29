@@ -19,6 +19,7 @@
 
 package com.veda.central.service.federated.client.keycloak;
 
+import com.veda.central.api.exception.UnauthorizedException;
 import com.veda.central.core.constants.Constants;
 import org.apache.http.HttpStatus;
 import org.keycloak.admin.client.Keycloak;

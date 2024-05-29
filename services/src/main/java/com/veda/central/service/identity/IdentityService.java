@@ -20,6 +20,7 @@
 package com.veda.central.service.identity;
 
 
+import com.veda.central.api.exception.UnauthorizedException;
 import com.veda.central.core.constants.Constants;
 import com.veda.central.core.identity.api.AuthToken;
 import com.veda.central.core.identity.api.AuthenticationRequest;
@@ -50,7 +51,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
-import javax.ws.rs.NotAuthorizedException;
 import java.util.Collections;
 import java.util.List;
 import java.util.stream.IntStream;
@@ -93,7 +93,7 @@ public class IdentityService {
             LOGGER.error(msg);
 
             if (ex.getStatusCode() == HttpStatus.SC_UNAUTHORIZED) {
-                throw new NotAuthorizedException(msg);
+                throw new UnauthorizedException(msg);
             }
             throw new RuntimeException(msg);
 
