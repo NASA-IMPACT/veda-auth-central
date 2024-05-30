@@ -1517,7 +1517,7 @@ public class KeycloakClient {
     }
 
     public Map<String, Object> getUserInfo(String accessToken, long realmId) {
-        String userInfoEndpoint = iamServerURL + "/realms/" + realmId + "/protocol/openid-connect/userinfo";
+        String userInfoEndpoint = iamServerURL + "realms/" + realmId + "/protocol/openid-connect/userinfo";
 
         HttpRequest request = HttpRequest.newBuilder()
                 .uri(URI.create(userInfoEndpoint))

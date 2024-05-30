@@ -38,6 +38,7 @@ import com.veda.central.core.iam.api.RegisterUsersResponse;
 import com.veda.central.core.iam.api.ResetUserPassword;
 import com.veda.central.core.iam.api.UserAttribute;
 import com.veda.central.core.iam.api.UserRepresentation;
+import com.veda.central.core.iam.api.UserSearchMetadata;
 import com.veda.central.core.iam.api.UserSearchRequest;
 import com.veda.central.core.identity.api.AuthToken;
 import com.veda.central.core.user.management.api.LinkUserProfileRequest;
@@ -475,20 +476,31 @@ public class UserManagementController {
                     "which can include attributes like username, email, roles, etc. It returns a FindUsersResponse " +
                     "containing the matching users' profiles."
     )
-    public ResponseEntity<FindUsersResponse> findUsers(@RequestBody FindUsersRequest request, @RequestHeader HttpHeaders headers) {
-        Optional<AuthClaim> claim = tokenAuthorizer.authorize(headers, request.getClientId());
+    public ResponseEntity<FindUsersResponse> findUsers(@RequestParam(value = "client_id") String clientId,
+                                                       @RequestParam(value = "offset") int offset,
+                                                       @RequestParam(value = "limit") int limit,
+                                                       @RequestParam("user.id") String userId,
+                                                       @RequestHeader HttpHeaders headers) {
+        Optional<AuthClaim> claim = tokenAuthorizer.authorize(headers, clientId);
 
         if (claim.isPresent()) {
             AuthClaim authClaim = claim.get();
-            request = request.toBuilder().setClientId(authClaim.getIamAuthId())
+            UserSearchMetadata userSearchMetadata = UserSearchMetadata.newBuilder()
+                    .setId(userId)
+                    .build();
+            FindUsersRequest request = FindUsersRequest.newBuilder().setClientId(authClaim.getIamAuthId())
                     .setClientSec(authClaim.getIamAuthSecret())
-                    .setTenantId(claim.get().getTenantId()).build();
+                    .setTenantId(claim.get().getTenantId())
+                    .setOffset(offset)
+                    .setLimit(limit)
+                    .setUser(userSearchMetadata)
+                    .build();
+
+            FindUsersResponse response = userManagementService.findUsers(request);
+            return ResponseEntity.ok(response);
         } else {
             throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Request is not authorized");
         }
-
-        FindUsersResponse response = userManagementService.findUsers(request);
-        return ResponseEntity.ok(response);
     }
 
     @PutMapping("/user/password")
