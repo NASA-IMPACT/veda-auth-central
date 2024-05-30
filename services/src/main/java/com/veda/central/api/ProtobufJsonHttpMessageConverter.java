@@ -58,7 +58,7 @@ public class ProtobufJsonHttpMessageConverter extends AbstractHttpMessageConvert
     @Override
     protected void writeInternal(Message message, HttpOutputMessage outputMessage) throws HttpMessageNotWritableException {
         try {
-            outputMessage.getBody().write(JsonFormat.printer().print(message).getBytes(StandardCharsets.UTF_8));
+            outputMessage.getBody().write(JsonFormat.printer().preservingProtoFieldNames().print(message).getBytes(StandardCharsets.UTF_8));
         } catch (Exception e) {
             throw new HttpMessageConversionException("Error writing Protobuf message", e);
         }
