@@ -74,14 +74,6 @@
             <groupId>com.google.protobuf</groupId>
             <artifactId>protobuf-java</artifactId>
         </dependency>
-        <dependency>
-            <groupId>org.springdoc</groupId>
-            <artifactId>springdoc-openapi-starter-webmvc-ui</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>com.hubspot.jackson</groupId>
-            <artifactId>jackson-datatype-protobuf</artifactId>
-        </dependency>
     </dependencies>
 
 </project>

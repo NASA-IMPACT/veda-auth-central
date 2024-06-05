@@ -17,14 +17,14 @@
  *  under the License.
  */
 
-package com.veda.central.api.exception;
+package com.veda.central.api.util;
 
-/**
- * UnAuthorized Exception
- */
-public class UnauthorizedException extends RuntimeException {
+import com.google.protobuf.Message;
+import org.springframework.http.ResponseEntity;
 
-    public UnauthorizedException(String msg, Throwable throwable) {
-        super(msg, throwable);
+public class RestUtil {
+
+    public static ResponseEntity<String> extractOkResponse(Message message) {
+        return ResponseEntity.ok(ProtobufJsonUtil.protobufToJson(message));
     }
 }

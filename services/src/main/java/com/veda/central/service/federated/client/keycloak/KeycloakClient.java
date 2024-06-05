@@ -19,8 +19,6 @@
 
 package com.veda.central.service.federated.client.keycloak;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.veda.central.api.exception.UnauthorizedException;
 import com.veda.central.core.constants.Constants;
 import org.apache.http.HttpStatus;
 import org.keycloak.admin.client.Keycloak;
@@ -53,9 +51,6 @@ import javax.validation.constraints.NotNull;
 import javax.ws.rs.NotFoundException;
 import javax.ws.rs.core.Response;
 import java.net.URI;
-import java.net.http.HttpClient;
-import java.net.http.HttpRequest;
-import java.net.http.HttpResponse;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
@@ -73,8 +68,6 @@ public class KeycloakClient {
 
     private static final int ACCESS_TOKEN_LIFE_SPAN = 1800;
     private static final int SESSION_IDLE_TIMEOUT = 3600;
-
-    private final ObjectMapper objectMapper;
 
     @Value("${iam.server.client.id:admin-cli}")
     private String clientId;
@@ -105,10 +98,6 @@ public class KeycloakClient {
 
     @Value("${iam.federated.cilogon.jwksUri:https://cilogon.org/oauth2/certs}")
     private String jwksUri;
-
-    public KeycloakClient(ObjectMapper objectMapper) {
-        this.objectMapper = objectMapper;
-    }
 
     public void createRealm(String realmId, String displayName) {
         try (Keycloak client = getClient(iamServerURL, superAdminRealmID, superAdminUserName, superAdminPassword)) {
@@ -1513,30 +1502,6 @@ public class KeycloakClient {
             String msg = "Error occurred end user validity: " + ex.getMessage();
             LOGGER.error(msg, ex);
             throw new RuntimeException(msg, ex);
-        }
-    }
-
-    public Map<String, Object> getUserInfo(String accessToken, long realmId) {
-        String userInfoEndpoint = iamServerURL + "realms/" + realmId + "/protocol/openid-connect/userinfo";
-
-        HttpRequest request = HttpRequest.newBuilder()
-                .uri(URI.create(userInfoEndpoint))
-                .header("Authorization", "Bearer " + accessToken)
-                .header("Accept", "application/json")
-                .GET()
-                .build();
-
-        HttpClient client = HttpClient.newHttpClient();
-
-        try {
-            HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
-            if (response.statusCode() == 200) {
-                return objectMapper.readValue(response.body(), Map.class);
-            } else {
-                throw new IllegalStateException("Failed to fetch user info: Status code " + response.statusCode());
-            }
-        } catch (Exception e) {
-            throw new RuntimeException("Error fetching user info", e);
         }
     }
 

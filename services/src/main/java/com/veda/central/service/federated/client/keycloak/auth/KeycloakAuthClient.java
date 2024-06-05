@@ -340,7 +340,7 @@ public class KeycloakAuthClient {
 
         try (CloseableHttpClient httpClient = HttpClients.createSystem();
              CloseableHttpResponse response = httpClient.execute(httpPost)) {
-            if (response.getStatusLine().getStatusCode() != 204) {
+            if (response.getStatusLine().getStatusCode() != 200) {
                 throw new IllegalStateException("Failed to end session properly: " + EntityUtils.toString(response.getEntity()));
             }
         } catch (Exception e) {
