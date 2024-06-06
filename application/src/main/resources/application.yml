@@ -78,3 +78,8 @@ ciLogon:
       endpoint: https://test.cilogon.org/oauth2/oidc-cm
   institutions:
     endpoint: https://cilogon.org/idplist/
+
+management:
+  tracing:
+    sampling:
+      probability: 1

@@ -63,3 +63,41 @@ services:
                    vault secrets enable -version=1 -path=secret kv &&
                    vault secrets enable -version=1 -path=resourcesecret kv"
       interval: 5s
+
+  tempo:
+    image: grafana/tempo
+    extra_hosts: [ 'host.docker.internal:host-gateway' ]
+    command: [ "-config.file=/etc/tempo.yaml" ]
+    volumes:
+      - ../monitoring/tempo/tempo.yaml:/etc/tempo.yaml:ro
+      - ./tempo-data:/tmp/tempo
+    ports:
+    - "14268"
+    - "9411:9411"
+
+
+  loki:
+    image: grafana/loki:3.0.0
+    ports:
+      - "3100:3100"
+    extra_hosts: [ 'host.docker.internal:host-gateway' ]
+    command: -config.file=/etc/loki/local-config.yaml
+    environment:
+      - JAEGER_AGENT_HOST=tempo
+      - JAEGER_ENDPOINT=http://tempo:14268/api/traces
+      - JAEGER_SAMPLER_TYPE=const
+      - JAEGER_SAMPLER_PARAM=1
+
+  grafana:
+    image: grafana/grafana
+    extra_hosts: [ 'host.docker.internal:host-gateway' ]
+    volumes:
+      - ../monitoring/grafana/provisioning/datasources:/etc/grafana/provisioning/datasources:ro
+      - ../monitoring/grafana/provisioning/dashboards:/etc/grafana/provisioning/dashboards:ro
+    environment:
+      - GF_PATHS_PROVISIONING=/etc/monitoring/grafana/provisioning
+      - GF_AUTH_ANONYMOUS_ENABLED=true
+      - GF_AUTH_ANONYMOUS_ORG_ROLE=Admin
+
+    ports:
+      - "3000:3000"
