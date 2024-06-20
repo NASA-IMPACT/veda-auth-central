@@ -198,7 +198,8 @@ public class IdentityManagementService {
 
             String loginURL = endpoint + "?" + "client_id=" + iamMetadata.getId() + "&" + "redirect_uri="
                     + request.getRedirectUri() + "&" + "response_type="
-                    + Constants.AUTHORIZATION_CODE + "&" + "scope=" + request.getScope() + "&" + "state=" + request.getState();
+                    + Constants.AUTHORIZATION_CODE + "&" + "scope=" + request.getScope() + "&" + "state=" + request.getState()
+                    + "&kc_idp_hint=oidc";
 
             return AuthorizationResponse.newBuilder().setLoginURI(loginURL).build();
 
