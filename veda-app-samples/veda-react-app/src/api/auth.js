@@ -53,11 +53,12 @@ const getClientAuthBase64 = async (clientId = null, clientSec = null) => {
 }
 
 const fetchAuthorizationEndpoint = async () => {
-    const openIdConfigEndpoint = "/identity-management/.well-known/openid-configuration";
+    // const openIdConfigEndpoint = "/identity-management/.well-known/openid-configuration";
     const redirectUri = config.redirectUri;
-    const {data: {authorization_endpoint}} = await axiosInstance.get(openIdConfigEndpoint,
-        {params: {'client_id': config.clientId,}});
-    window.location.href = `${authorization_endpoint}?response_type=code&client_id=${config.clientId}&redirect_uri=${redirectUri}&scope=openid&kc_idp_hint=oidc`;
+    const authorizeEndpoint = `/identity-management/authorize?response_type=code&client_id=${config.clientId}&redirect_uri=${encodeURIComponent(redirectUri)}&scope=user:email&kc_idp_hint=oidc&state=LDh1iNYlJcSujbgfFakT2iwhB6PIhgBidrFBmYNTBMw`;
+    const { data: { loginURI } } = await axiosInstance.get(authorizeEndpoint,{
+    });
+    window.location.href = loginURI;
 }
 
 const fetchToken = async ({code}) => {
