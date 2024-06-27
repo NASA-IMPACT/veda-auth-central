@@ -74,6 +74,11 @@
                 <artifactId>jackson-datatype-protobuf</artifactId>
                 <version>${protobuf.json.version}</version>
             </dependency>
+            <dependency>
+                <groupId>com.github.loki4j</groupId>
+                <artifactId>loki-logback-appender</artifactId>
+                <version>${loki.version}</version>
+            </dependency>
         </dependencies>
     </dependencyManagement>
 
@@ -97,6 +102,7 @@
         <spring.cloud.vault.version>4.0.1</spring.cloud.vault.version>
         <springdoc.version>2.5.0</springdoc.version>
         <protobuf.json.version>0.9.15</protobuf.json.version>
+        <loki.version>1.5.1</loki.version>
     </properties>
 
     <build>
