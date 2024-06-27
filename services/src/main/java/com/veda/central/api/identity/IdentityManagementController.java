@@ -316,12 +316,16 @@ public class IdentityManagementController {
     public ResponseEntity<AuthorizationResponse> authorize(
             @RequestParam(value = "client_id") String clientId,
             @RequestParam(value = "redirect_uri") String redirectUri,
-            @RequestParam(value = "tenant_id", required = false) int tenantId) {
+            @RequestParam(value = "scope") String scope,
+            @RequestParam(value = "state") String state,
+            @RequestParam(value = "response_type") String responseType) {
 
         AuthorizationRequest request = AuthorizationRequest.newBuilder()
                 .setClientId(clientId)
                 .setRedirectUri(redirectUri)
-                .setTenantId(tenantId)
+                .setScope(scope)
+                .setState(state)
+                .setResponseType(responseType)
                 .build();
         AuthorizationResponse response = identityManagementService.authorize(request);
         return ResponseEntity.ok(response);
