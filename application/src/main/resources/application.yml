@@ -27,13 +27,12 @@ spring:
     database-platform: org.hibernate.dialect.MySQL8Dialect
   cloud:
     vault:
-      token: 00000000-0000-0000-0000-000000000000
+      token: 00000000-0000-0000-0000-000000000000 # Update this with your token
       scheme: http
       kv:
         enabled: true
       host: localhost
       port: 8200
-      uri: http://localhost:8201
       authentication: token
       connection-timeout: 5000
       read-timeout: 15000

@@ -45,17 +45,22 @@ services:
   vault:
     image: vault:1.7.0
     container_name: vault
-    restart: on-failure:10
+    restart: unless-stopped
     ports:
       - "8201:8201"
       - "8200:8200"
     environment:
-      VAULT_ADDR: 'http://0.0.0.0:8201'
+      VAULT_ADDR: http://0.0.0.0:8201
+      VAULT_API_ADDR: http://127.0.0.1:8200
+      VAULT_CLUSTER_ADDR: http://127.0.0.1:8201
       VAULT_LOCAL_CONFIG: '{"listener": [{"tcp":{"address": "0.0.0.0:8201","tls_disable":"1"}}], "default_lease_ttl": "168h", "max_lease_ttl": "720h"}, "ui": true}'
-      VAULT_DEV_ROOT_TOKEN_ID: '00000000-0000-0000-0000-000000000000'
-      VAULT_TOKEN: '00000000-0000-0000-0000-000000000000'
     cap_add:
       - IPC_LOCK
+    volumes:
+      - ./vault/data:/vault/data
+      - ./vault/config:/vault/config
+    entrypoint: vault server
+    command: -config=/vault/config/vault-config.hcl
     healthcheck:
       test: "vault login 00000000-0000-0000-0000-000000000000 &&
                    vault kv get secret &&
