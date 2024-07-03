@@ -82,7 +82,7 @@ public class CredentialManager {
         }
     }
 
-    public Credential decodeToken(String token) {
+    public static Credential decodeToken(String token) {
         try {
             byte[] array = Base64.getDecoder().decode(token);
             if (array != null && array.length > 0) {

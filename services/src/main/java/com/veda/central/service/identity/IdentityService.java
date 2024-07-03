@@ -444,14 +444,17 @@ public class IdentityService {
     }
 
     private TokenResponse generateTokenResponse(JSONObject object) throws Exception {
-        if (object != null && object.getString("access_token") != null) {
+        if (object != null && object.has("access_token")) {
             return TokenResponse.newBuilder()
                     .setAccessToken(object.getString("access_token"))
-                    .setExpiresIn(object.optLong("expires_in"))
+                    .setExpiresIn(object.optInt("expires_in"))
                     .setRefreshToken(object.optString("refresh_token"))
-                    .setRefreshExpiresIn(object.optLong("refresh_expires_in"))
+                    .setRefreshExpiresIn(object.optInt("refresh_expires_in"))
                     .setTokenType(object.optString("token_type"))
                     .setScope(object.optString("scope"))
+                    .setIdToken(object.optString("id_token"))
+                    .setSessionState(object.optString("session_state"))
+                    .setNotBeforePolicy(object.optInt("not-before-policy"))
                     .build();
         }
         LOGGER.error("Keycloak authentication client does not have the 'access_token");

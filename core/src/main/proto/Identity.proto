@@ -59,12 +59,12 @@ message GetTokenRequest {
 
 message TokenResponse {
     string access_token = 1;
-    double expires_in = 2;
-    double refresh_expires_in = 3;
+    int32 expires_in = 2;
+    int32 refresh_expires_in = 3;
     string refresh_token = 4;
     string token_type = 5;
     string id_token = 6;
-    double not_before_policy = 7;
+    int32 not_before_policy = 7;
     string session_state = 8;
     string scope = 9;
 }

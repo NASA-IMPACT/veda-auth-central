@@ -37,18 +37,10 @@ import com.veda.central.core.tenant.management.api.DeleteTenantRequest;
 import com.veda.central.core.tenant.management.api.GetTenantRequest;
 import com.veda.central.core.tenant.management.api.TenantValidationRequest;
 import com.veda.central.core.tenant.management.api.UpdateTenantRequest;
-import com.veda.central.core.tenant.profile.api.GetAllTenantsForUserRequest;
-import com.veda.central.core.tenant.profile.api.GetAllTenantsForUserResponse;
-import com.veda.central.core.tenant.profile.api.GetAllTenantsResponse;
-import com.veda.central.core.tenant.profile.api.GetAttributeUpdateAuditTrailResponse;
-import com.veda.central.core.tenant.profile.api.GetAuditTrailRequest;
-import com.veda.central.core.tenant.profile.api.GetStatusUpdateAuditTrailResponse;
-import com.veda.central.core.tenant.profile.api.GetTenantsRequest;
-import com.veda.central.core.tenant.profile.api.Tenant;
-import com.veda.central.core.tenant.profile.api.UpdateStatusRequest;
-import com.veda.central.core.tenant.profile.api.UpdateStatusResponse;
+import com.veda.central.core.tenant.profile.api.*;
 import com.veda.central.service.auth.AuthClaim;
 import com.veda.central.service.auth.TokenAuthorizer;
+import com.veda.central.service.identity.Constants;
 import com.veda.central.service.management.TenantManagementService;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
@@ -67,6 +59,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.server.ResponseStatusException;
 
+import java.util.List;
 import java.util.Optional;
 
 @RestController

@@ -37,6 +37,8 @@ import com.veda.central.core.identity.management.api.EndSessionRequest;
 import com.veda.central.core.identity.management.api.GetCredentialsRequest;
 import com.veda.central.service.auth.AuthClaim;
 import com.veda.central.service.auth.TokenAuthorizer;
+import com.veda.central.service.credential.store.Credential;
+import com.veda.central.service.credential.store.CredentialManager;
 import com.veda.central.service.management.IdentityManagementService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -60,7 +62,11 @@ import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.server.ResponseStatusException;
 
 import java.net.URI;
+import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
+import java.util.Base64;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
 
 @RestController
@@ -332,7 +338,7 @@ public class IdentityManagementController {
         return ResponseEntity.status(HttpStatus.FOUND).location(URI.create(response.getRedirectUri())).build();
     }
 
-    @PostMapping(value = "/token", consumes = MediaType.APPLICATION_JSON_VALUE)
+    @PostMapping(value = "/token", consumes = MediaType.APPLICATION_FORM_URLENCODED_VALUE)
     @Operation(
             summary = "Get Token",
             description = "Retrieves a token based on the provided request. For basic authentication, use 'user_name' and 'password'; for authorization code grant flow, use 'code'. If successful, returns a TokenResponse.",
@@ -389,11 +395,11 @@ public class IdentityManagementController {
                     @ApiResponse(responseCode = "500", description = "Internal Server Error", content = @Content())
             }
     )
-    public ResponseEntity<TokenResponse> token(@RequestBody GetTokenRequest request, @RequestHeader HttpHeaders headers) {
+    public ResponseEntity<?> token(@RequestParam Map<String, String> params, @RequestHeader HttpHeaders headers) {
         // Expects the Base64 encoded value 'clientId:clientSecret' for Authorization Header
-        Optional<AuthClaim> claim = tokenAuthorizer.authorize(headers);
+        //Optional<AuthClaim> claim = tokenAuthorizer.authorize(headers);
 
-        if (claim.isPresent()) {
+        /*if (claim.isPresent()) {
             AuthClaim authClaim = claim.get();
             request = request.toBuilder().setTenantId(authClaim.getTenantId())
                     .setClientId(authClaim.getIamAuthId())
@@ -401,7 +407,39 @@ public class IdentityManagementController {
                     .build();
         } else {
             throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Request is not authorized");
+        }*/
+
+        // TODO: check if client_id and secret is in the params map. If so, do not check below
+
+        Credential credential = null;
+        if (params.containsKey("client_id") && params.containsKey("client_secret")) {
+            credential = new Credential(params.get("client_id"), params.get("client_secret"));
+
+        } else {
+            // This is fallback
+            if (!headers.containsKey("authorization") || Objects.requireNonNull(headers.get("authorization")).isEmpty()) {
+                return ResponseEntity.badRequest().body("No client id and secret is provided in the request");
+            }
+
+            String authorizationHeader = headers.get("authorization").get(0);
+            if (!authorizationHeader.startsWith("Basic")) {
+                return ResponseEntity.badRequest().body("Expecting a basic auth type auth header");
+            }
+
+            credential = CredentialManager.decodeToken(authorizationHeader.substring("Basic ".length()));
+            if (credential == null) {
+                return ResponseEntity.badRequest().body("Credentials were provided in incorrect format. Is should be 'Basic base64(client_id:client_secret)'");
+            }
         }
+
+        // TODO : Validate key availability in params redirect_uri, code, grant_type
+        GetTokenRequest request = GetTokenRequest.newBuilder()
+                .setRedirectUri(params.get("redirect_uri"))
+                .setCode(params.get("code"))
+                .setGrantType(params.get("grant_type"))
+                .setClientId(credential.getId())
+                .setTenantId(Long.parseLong(credential.getId().split("-")[2])) // TODO This is very risky. Find a different way to figure out tenant id
+                .setClientSecret(credential.getSecret()).build();
 
         TokenResponse response = identityManagementService.token(request);
         return ResponseEntity.ok(response);

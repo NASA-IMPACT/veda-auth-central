@@ -55,6 +55,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
+import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -196,10 +198,14 @@ public class IdentityManagementService {
             com.veda.central.core.identity.api.AuthorizationResponse response = identityService.getAuthorizeEndpoint(getAuthorizationEndpointRequest);
             String endpoint = response.getAuthorizationEndpoint();
 
-            String loginURL = endpoint + "?" + "client_id=" + iamMetadata.getId() + "&" + "redirect_uri="
-                    + request.getRedirectUri() + "&" + "response_type="
-                    + Constants.AUTHORIZATION_CODE + "&" + "scope=" + (request.getScope().contains("openid") ? request.getScope() : request.getScope() + " openid") + "&" + "state=" + request.getState()
-                    + "&kc_idp_hint=oidc";
+            String query =  "client_id=" + encode(iamMetadata.getId()) + "&" +
+                    "redirect_uri=" + encode(request.getRedirectUri()) + "&" +
+                    "response_type=" + encode(Constants.AUTHORIZATION_CODE) + "&" +
+                    "scope=" + encode(request.getScope().contains("openid") ? request.getScope() : request.getScope() + " openid") + "&" +
+                    "state=" + encode(request.getState()) + "&" +
+                    "kc_idp_hint=oidc";
+
+            String loginURL = endpoint + "?" + query;
 
             return AuthorizationResponse.newBuilder().setRedirectUri(loginURL).build();
 
@@ -210,6 +216,9 @@ public class IdentityManagementService {
         }
     }
 
+    private String encode(String part) {
+        return URLEncoder.encode(part, StandardCharsets.UTF_8);
+    }
     /**
      * Retrieves the access token for the user based on the provided token request.
      *
