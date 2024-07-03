@@ -201,10 +201,10 @@ public class IdentityManagementService {
                     + Constants.AUTHORIZATION_CODE + "&" + "scope=" + (request.getScope().contains("openid") ? request.getScope() : request.getScope() + " openid") + "&" + "state=" + request.getState()
                     + "&kc_idp_hint=oidc";
 
-            return AuthorizationResponse.newBuilder().setLoginURI(loginURL).build();
+            return AuthorizationResponse.newBuilder().setRedirectUri(loginURL).build();
 
         } catch (Exception ex) {
-            String msg = "Exception occurred while formulating login uri " + ex.getMessage();
+            String msg = "Exception occurred while formulating the redirect uri " + ex.getMessage();
             LOGGER.error(msg);
             throw new InternalServerException(msg, ex);
         }

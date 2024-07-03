@@ -38,7 +38,7 @@ message AuthorizationRequest {
 }
 
 message AuthorizationResponse {
-  string loginURI = 1;
+  string redirect_uri = 1;
 }
 
 message GetCredentialsRequest {

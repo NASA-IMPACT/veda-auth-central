@@ -59,6 +59,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.server.ResponseStatusException;
 
+import java.net.URI;
 import java.util.Map;
 import java.util.Optional;
 
@@ -313,7 +314,7 @@ public class IdentityManagementController {
                     @ApiResponse(responseCode = "500", description = "Internal Server Error", content = @Content())
             }
     )
-    public ResponseEntity<AuthorizationResponse> authorize(
+    public ResponseEntity<?> authorize(
             @RequestParam(value = "client_id") String clientId,
             @RequestParam(value = "redirect_uri") String redirectUri,
             @RequestParam(value = "scope") String scope,
@@ -328,7 +329,7 @@ public class IdentityManagementController {
                 .setResponseType(responseType)
                 .build();
         AuthorizationResponse response = identityManagementService.authorize(request);
-        return ResponseEntity.ok(response);
+        return ResponseEntity.status(HttpStatus.FOUND).location(URI.create(response.getRedirectUri())).build();
     }
 
     @PostMapping(value = "/token", consumes = MediaType.APPLICATION_JSON_VALUE)
