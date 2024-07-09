@@ -61,6 +61,8 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import javax.ws.rs.NotFoundException;
+import java.text.MessageFormat;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -68,6 +70,7 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicReference;
 
 @Service
 public class UserProfileService {
@@ -387,7 +390,7 @@ public class UserProfileService {
                     if (parent.isEmpty()) {
                         String msg = "Error occurred while creating  Group for " + request.getTenantId() + " reason : Parent group not found";
                         LOGGER.error(msg);
-                        throw new RuntimeException(msg);
+                        throw new IllegalArgumentException(msg);
                     }
                     GroupMapper.setParentGroupMembership(parent.get(), entity);
                 }
@@ -421,13 +424,10 @@ public class UserProfileService {
 
                 return GroupMapper.createGroup(exOP.get(), userGroupMembership.getUserProfile().getUsername());
             } else {
-
-                String msg = "Error occurred while creating Group for " + request.getTenantId()
-                        + " reason : DB error";
+                String msg = MessageFormat.format("Error occurred while creating the Group: {0} for the Tenant: {1}", effectiveId, request.getTenantId());
                 LOGGER.error(msg);
                 throw new RuntimeException(msg);
             }
-
 
         } catch (Exception ex) {
             String msg = "Error occurred while creating Group for " + request.getTenantId() + " reason :" + ex.getMessage();
@@ -695,6 +695,125 @@ public class UserProfileService {
         }
     }
 
+    public com.veda.central.core.user.profile.api.Status addChildGroupToParentGroup(com.veda.central.core.user.profile.api.GroupToGroupMembership request) {
+        try {
+            LOGGER.debug("Request received to addChildGroupToParentGroup for " + request.getTenantId());
+
+            long tenantId = request.getTenantId();
+            String childId = request.getChildId();
+            String parentId = request.getParentId();
+            String effectiveChildId = childId + "@" + tenantId;
+            String effectiveParentId = parentId + "@" + tenantId;
+
+            Optional<Group> childEntity = groupRepository.findById(effectiveChildId);
+            Optional<Group> parentEntity = groupRepository.findById(effectiveParentId);
+
+            if (childEntity.isEmpty() || parentEntity.isEmpty()) {
+                String msg = "Child or parent group not available";
+                LOGGER.error(msg);
+                throw new NotFoundException(msg);
+            }
+
+            List<GroupToGroupMembership> groupToGroupMemberships = groupToGroupMembershipRepository.findByChildIdAndParentId(effectiveChildId, effectiveParentId);
+            if (groupToGroupMemberships == null || groupToGroupMemberships.isEmpty()) {
+
+                GroupToGroupMembership membership = GroupMapper.groupToGroupMembership(childEntity.get(), parentEntity.get());
+
+                GroupToGroupMembership saved = groupToGroupMembershipRepository.save(membership);
+
+                if (saved.getId() != null) {
+                    return com.veda.central.core.user.profile.api.Status.newBuilder().setStatus(true).build();
+                } else {
+                    String msg = "Group membership creation failed";
+                    LOGGER.error(msg);
+                    throw new InternalServerException(msg);
+                }
+            } else {
+                return com.veda.central.core.user.profile.api.Status.newBuilder().setStatus(true).build();
+            }
+
+
+        } catch (Exception ex) {
+            String msg = "Error occurred while adding child group to parent group for " + request.getTenantId() + " reason :" + ex.getMessage();
+            LOGGER.error(msg);
+            throw new InternalServerException(msg);
+        }
+    }
+
+    public com.veda.central.core.user.profile.api.Status removeChildGroupFromParentGroup(com.veda.central.core.user.profile.api.GroupToGroupMembership request) {
+        try {
+            LOGGER.debug("Request received to removeChildGroupFromParentGroup for " + request.getTenantId());
+
+            long tenantId = request.getTenantId();
+            String childId = request.getChildId();
+            String parentId = request.getParentId();
+            String effectiveChildId = childId + "@" + tenantId;
+            String effectiveParentId = parentId + "@" + tenantId;
+
+            Optional<Group> childEntity = groupRepository.findById(effectiveChildId);
+            Optional<Group> parentEntity = groupRepository.findById(effectiveParentId);
+
+            if (childEntity.isEmpty() || parentEntity.isEmpty()) {
+                String msg = "Child or parent group not available";
+                LOGGER.error(msg);
+                throw new NotFoundException(msg);
+            }
+
+            List<GroupToGroupMembership> groupToGroupMemberships = groupToGroupMembershipRepository.findByChildIdAndParentId(effectiveChildId, effectiveParentId);
+            if (groupToGroupMemberships != null && !groupToGroupMemberships.isEmpty()) {
+                groupToGroupMembershipRepository.delete(groupToGroupMemberships.get(0));
+            }
+
+            return com.veda.central.core.user.profile.api.Status.newBuilder().setStatus(true).build();
+
+        } catch (Exception ex) {
+            String msg = "Error occurred while remove child group from parent group for " + request.getTenantId() + " reason :" + ex.getMessage();
+            LOGGER.error(msg);
+            throw new InternalServerException(msg);
+        }
+    }
+
+    public GetAllGroupsResponse getAllParentGroupsOfGroup(GroupRequest request) {
+        try {
+            LOGGER.debug("Request received to getAllParentGroupsOfGroup for " + request.getTenantId());
+
+            String groupId = request.getGroup().getId();
+            long tenantId = request.getTenantId();
+
+            String effectiveId = groupId + "@" + tenantId;
+            Optional<Group> groups = groupRepository.findById(effectiveId);
+
+            if (groups.isEmpty()) {
+                return GetAllGroupsResponse.newBuilder().build();
+
+            } else {
+                List<Group> groupList = new ArrayList<>();
+                groupList.add(groups.get());
+                Map<String, Group> groupMap = getAllUniqueGroups(groupList, null);
+                List<com.veda.central.core.user.profile.api.Group> serviceGroupList = new ArrayList<>();
+
+                groupMap.keySet().forEach(gr -> {
+                    List<UserGroupMembership> userGroupMemberships = groupMembershipRepository.findAllByGroupId(effectiveId);
+                    String ownerId = null;
+                    for (UserGroupMembership userGroupMembership : userGroupMemberships) {
+                        if (userGroupMembership.getUserGroupMembershipType().getId().equals(DefaultGroupMembershipTypes.OWNER.name())) {
+                            ownerId = userGroupMembership.getUserProfile().getUsername();
+                        }
+                    }
+
+                    serviceGroupList.add(GroupMapper.createGroup(groupMap.get(gr), ownerId));
+                });
+
+                return GetAllGroupsResponse.newBuilder().addAllGroups(serviceGroupList).build();
+            }
+
+        } catch (Exception ex) {
+            String msg = "Error occurred while fetching all parent groups for group " + request.getGroup().getId() + " in tenant " + request.getTenantId() + " reason :" + ex.getMessage();
+            LOGGER.error(msg);
+            throw new InternalServerException(msg, ex);
+        }
+    }
+
     public GetAllGroupsResponse getAllGroupsOfUser(UserProfileRequest request) {
         try {
             LOGGER.debug("Request received to getAllGroupsOfUser for " + request.getTenantId());
@@ -782,6 +901,105 @@ public class UserProfileService {
             String msg = "Error occurred while deleting removeUserGroupMembershipType of type  " + request.getType();
             LOGGER.error(msg);
             throw new RuntimeException(msg, ex);
+        }
+    }
+
+    public GetAllUserProfilesResponse getAllChildUsers(GroupRequest request) {
+        try {
+            LOGGER.debug("Request received to getAllChildUsers in tenant " + request.getTenantId() +
+                    " for group with Id " + request.getGroup().getId());
+
+            long tenantId = request.getTenantId();
+            String username = request.getGroup().getId();
+
+            String effectiveId = username + "@" + tenantId;
+
+            Optional<Group> groupOptional = groupRepository.findById(effectiveId);
+
+            if (groupOptional.isEmpty()) {
+                String msg = "group not found: " + request.getGroup().getId();
+                LOGGER.error(msg);
+                throw new NotFoundException(msg);
+            }
+
+            List<UserGroupMembership> memberships = groupMembershipRepository.findAllByGroupId(effectiveId);
+            List<com.veda.central.core.user.profile.api.UserProfile> userProfileList = new ArrayList<>();
+            List<UserGroupMembership> selectedProfiles = new ArrayList<>();
+
+            if (memberships != null && !memberships.isEmpty()) {
+                memberships.forEach(mem -> {
+                    AtomicBoolean addToList = new AtomicBoolean(true);
+                    selectedProfiles.forEach(ex -> {
+                        if (String.valueOf(ex.getId()).equals(mem.getUserProfile().getId())) {
+                            addToList.set(false);
+                        }
+                    });
+
+                    if (addToList.get()) {
+                        selectedProfiles.add(mem);
+                    }
+                });
+            }
+
+            if (!selectedProfiles.isEmpty()) {
+                selectedProfiles.forEach(gr -> userProfileList.add(UserProfileMapper.createUserProfileFromUserProfileEntity(gr.getUserProfile(),
+                        gr.getUserGroupMembershipType().getId())));
+            }
+
+            return GetAllUserProfilesResponse.newBuilder().addAllProfiles(userProfileList).build();
+
+        } catch (Exception ex) {
+            String msg = "Error occurred while fetching all child users in tenant " + request.getTenantId() +
+                    " for group with Id " + request.getGroup().getId();
+            LOGGER.error(msg);
+            throw new InternalServerException(msg, ex);
+        }
+    }
+
+    public GetAllGroupsResponse getAllChildGroups(GroupRequest request) {
+        try {
+            LOGGER.debug("Request received to getAllChildGroups in tenant " + request.getTenantId() +
+                    " for group with Id " + request.getGroup().getId());
+
+            long tenantId = request.getTenantId();
+            String groupId = request.getGroup().getId();
+            String effectiveParentId = groupId + "@" + tenantId;
+            Optional<Group> groupOptional = groupRepository.findById(effectiveParentId);
+
+            if (groupOptional.isEmpty()) {
+                String msg = "group not found: " + request.getGroup().getId();
+                LOGGER.error(msg);
+                throw new NotFoundException(msg);
+            }
+
+            List<GroupToGroupMembership> memberships = groupToGroupMembershipRepository.findAllByParentId(effectiveParentId);
+            List<com.veda.central.core.user.profile.api.Group> groupList = new ArrayList<>();
+            HashMap<String, Group> selectedGroupMap = new HashMap<>();
+
+            if (memberships != null && !memberships.isEmpty()) {
+                memberships.forEach(mem -> {
+                    selectedGroupMap.put(mem.getChild().getId(), mem.getChild());
+                });
+            }
+
+            selectedGroupMap.values().forEach(group -> {
+                List<UserGroupMembership> groupMemberships = groupMembershipRepository.findAllByGroupId(group.getId());
+                AtomicReference<String> ownerId = new AtomicReference<>();
+                groupMemberships.forEach(grm -> {
+                    if (grm.getUserGroupMembershipType().getId().equals(DefaultGroupMembershipTypes.OWNER.name())) {
+                        ownerId.set(grm.getUserProfile().getUsername());
+                    }
+                });
+                groupList.add(GroupMapper.createGroup(group, ownerId.get()));
+            });
+
+            return GetAllGroupsResponse.newBuilder().addAllGroups(groupList).build();
+
+        } catch (Exception ex) {
+            String msg = "Error occurred while fetching all child groups in tenant " + request.getTenantId() +
+                    " for group with Id " + request.getGroup().getId();
+            LOGGER.error(msg, ex);
+            throw new InternalServerException(msg, ex);
         }
     }
 

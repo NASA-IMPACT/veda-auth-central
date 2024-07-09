@@ -27,4 +27,6 @@ import java.util.List;
 public interface GroupToGroupMembershipRepository extends JpaRepository<GroupToGroupMembership, String> {
 
     List<GroupToGroupMembership> findAllByChildId(String childId);
+    List<GroupToGroupMembership> findByChildIdAndParentId(String childId, String parentId);
+    List<GroupToGroupMembership> findAllByParentId(String parentId);
 }
