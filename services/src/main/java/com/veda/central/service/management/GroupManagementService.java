@@ -39,12 +39,12 @@ import com.veda.central.service.exceptions.InternalServerException;
 import com.veda.central.service.iam.IamAdminService;
 import com.veda.central.service.identity.IdentityService;
 import com.veda.central.service.profile.UserProfileService;
+import jakarta.persistence.EntityNotFoundException;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
-import javax.ws.rs.NotFoundException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
@@ -80,12 +80,16 @@ public class GroupManagementService {
                         setTenantId(request.getTenantId()).
                         setPerformedBy(request.getPerformedBy()).
                         setGroup(group).build();
-                Group exGroup = userProfileService.getGroup(groupRequest);
 
-                if (StringUtils.isNotBlank(exGroup.getName())) {
-                    String msg = "Group already exist with given id " + id;
-                    LOGGER.error(msg);
-                    throw new IllegalArgumentException(msg);
+                try {
+                    Group exGroup = userProfileService.getGroup(groupRequest);
+                    if (exGroup != null && StringUtils.isNotBlank(exGroup.getName())) {
+                        String msg = "Group already exist with given id " + id;
+                        LOGGER.error(msg);
+                        throw new IllegalArgumentException(msg);
+                    }
+                } catch (EntityNotFoundException ex) {
+                    // ignore
                 }
 
             } else {
@@ -108,21 +112,14 @@ public class GroupManagementService {
         try {
             LOGGER.debug("Request received to updateGroup for  group  " + request.getGroup().getId() + " of tenant " + request.getTenantId());
 
-            if (StringUtils.isNotBlank(request.getGroup().getId())) {
+            if (StringUtils.isBlank(request.getGroup().getId())) {
                 throw new IllegalArgumentException("No Group ID was provided to update the group");
             }
 
             Group exGroup = userProfileService.getGroup(request);
-            if (StringUtils.isNotBlank(exGroup.getName())) {
-                Group group = request.getGroup().toBuilder().setParentId(exGroup.getParentId()).build();
-                request = request.toBuilder().setGroup(group).build();
-                return userProfileService.updateGroup(request);
-
-            } else {
-                String msg = "Cannot find a group with id " + request.getId();
-                LOGGER.error(msg);
-                throw new NotFoundException(msg);
-            }
+            Group group = request.getGroup().toBuilder().setParentId(exGroup.getParentId()).build();
+            request = request.toBuilder().setGroup(group).build();
+            return userProfileService.updateGroup(request);
 
         } catch (Exception ex) {
             String msg = "Error occurred at updateGroup " + ex.getMessage();
@@ -149,15 +146,8 @@ public class GroupManagementService {
     }
 
     public Group findGroup(com.veda.central.core.user.profile.api.GroupRequest request) {
-        try {
-            LOGGER.debug("Request received to findGroup of tenant " + request.getTenantId());
-            return userProfileService.getGroup(request);
-
-        } catch (Exception ex) {
-            String msg = "Error occurred at removeUserFromGroup " + ex.getMessage();
-            LOGGER.error(msg, ex);
-            throw new InternalServerException(msg, ex);
-        }
+        LOGGER.debug("Request received to findGroup of tenant " + request.getTenantId());
+        return userProfileService.getGroup(request);
     }
 
     public GetAllGroupsResponse getAllGroups(com.veda.central.core.user.profile.api.GroupRequest request) {
@@ -180,7 +170,7 @@ public class GroupManagementService {
             return userProfileService.addUserToGroup(request);
 
         } catch (Exception ex) {
-            String msg = "Error occurred at addUserToGroup " + ex.getMessage();
+            String msg = "Error occurred while adding the user: " + request.getUsername() + " into the group: " + request.getGroupId();
             LOGGER.error(msg, ex);
             throw new InternalServerException(msg, ex);
         }
@@ -384,7 +374,7 @@ public class GroupManagementService {
                 .build();
 
         UserProfile exUser = userProfileService.getUserProfile(userProfileRequest);
-        if (exUser.getUsername().isBlank()) {
+        if (exUser != null && exUser.getUsername().isBlank()) {
             GetUserManagementSATokenRequest userManagementSATokenRequest = GetUserManagementSATokenRequest
                     .newBuilder()
                     .setClientId(clientId)

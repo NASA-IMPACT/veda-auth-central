@@ -23,6 +23,7 @@ import com.veda.central.core.model.user.Group;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.PersistenceContext;
 import jakarta.persistence.Query;
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.stereotype.Repository;
 
 import java.util.Date;
@@ -51,16 +52,16 @@ public class SearchGroupsRepositoryImpl implements SearchGroupsRepository {
         String query = "SELECT * FROM group_entity E WHERE ";
 
         if (!group.getName().isBlank()) {
-            query = query + "E.name  LIKE :" + "name" + " AND ";
+            query = query + "E.name LIKE :" + "name" + " AND ";
             valueMap.put("name", group.getName());
         }
 
-        if (!group.getDescription().isBlank()) {
+        if (StringUtils.isNotBlank(group.getDescription())) {
             query = query + "E.description LIKE :" + "description" + " AND ";
             valueMap.put("description", group.getDescription());
         }
 
-        if (!group.getId().isBlank()) {
+        if (StringUtils.isNotBlank(group.getId())) {
             query = query + "E.external_id = :" + "external_id" + " AND ";
             valueMap.put("external_id", group.getId());
         }

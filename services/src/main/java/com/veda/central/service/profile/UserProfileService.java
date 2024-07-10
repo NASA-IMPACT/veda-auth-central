@@ -523,7 +523,6 @@ public class UserProfileService {
 
                 if (groupList != null && !groupList.isEmpty()) {
                     groupRepository.deleteAll(groupList);
-
                 }
 
             } else {
@@ -539,32 +538,26 @@ public class UserProfileService {
     }
 
     public com.veda.central.core.user.profile.api.Group getGroup(GroupRequest request) {
-        try {
-            LOGGER.debug("Request received to getGroup for group " + request.getGroup().getId() + "at " + request.getTenantId());
+        LOGGER.debug("Request received to getGroup for group " + request.getGroup().getId() + "at " + request.getTenantId());
 
-            String userId = request.getGroup().getId();
-            long tenantId = request.getTenantId();
-            String effectiveId = userId + "@" + tenantId;
-            Optional<Group> op = groupRepository.findById(effectiveId);
+        String userId = request.getGroup().getId();
+        long tenantId = request.getTenantId();
+        String effectiveId = userId + "@" + tenantId;
+        Optional<Group> op = groupRepository.findById(effectiveId);
 
-            if (op.isPresent()) {
-                List<UserGroupMembership> userGroupMemberships = groupMembershipRepository.findAllByGroupId(effectiveId);
-                String ownerId = userGroupMemberships.stream()
-                        .filter(userGroupMembership -> userGroupMembership.getUserGroupMembershipType().getId().equals(DefaultGroupMembershipTypes.OWNER.name()))
-                        .map(userGroupMembership -> userGroupMembership.getUserProfile().getUsername())
-                        .findFirst()
-                        .orElse(null);
+        if (op.isPresent()) {
+            List<UserGroupMembership> userGroupMemberships = groupMembershipRepository.findAllByGroupId(effectiveId);
+            String ownerId = userGroupMemberships.stream()
+                    .filter(userGroupMembership -> userGroupMembership.getUserGroupMembershipType().getId().equals(DefaultGroupMembershipTypes.OWNER.name()))
+                    .map(userGroupMembership -> userGroupMembership.getUserProfile().getUsername())
+                    .findFirst()
+                    .orElse(null);
 
-                return GroupMapper.createGroup(op.get(), ownerId);
+            return GroupMapper.createGroup(op.get(), ownerId);
 
-            } else {
-                throw new EntityNotFoundException("Could not find the Group with the Id: " + userId);
-            }
-
-        } catch (Exception ex) {
-            String msg = "Error occurred while fetching group " + request.getGroup().getId() + "at " + request.getTenantId() + " reason :" + ex.getMessage();
-            LOGGER.error(msg);
-            throw new RuntimeException(msg, ex);
+        } else {
+            LOGGER.error("Could not find the Group with the Id: " + request.getGroup().getId());
+            throw new EntityNotFoundException("Could not find the Group with the Id: " + request.getGroup().getId());
         }
     }
 
@@ -722,16 +715,15 @@ public class UserProfileService {
                 GroupToGroupMembership saved = groupToGroupMembershipRepository.save(membership);
 
                 if (saved.getId() != null) {
+                    childEntity.get().setParentId(parentId);
+                    groupRepository.save(childEntity.get());
                     return com.veda.central.core.user.profile.api.Status.newBuilder().setStatus(true).build();
-                } else {
-                    String msg = "Group membership creation failed";
-                    LOGGER.error(msg);
-                    throw new InternalServerException(msg);
                 }
-            } else {
-                return com.veda.central.core.user.profile.api.Status.newBuilder().setStatus(true).build();
             }
 
+            String msg = "Group membership creation failed";
+            LOGGER.error(msg);
+            throw new InternalServerException(msg);
 
         } catch (Exception ex) {
             String msg = "Error occurred while adding child group to parent group for " + request.getTenantId() + " reason :" + ex.getMessage();
@@ -764,6 +756,8 @@ public class UserProfileService {
                 groupToGroupMembershipRepository.delete(groupToGroupMemberships.get(0));
             }
 
+            childEntity.get().setParentId("");
+            groupRepository.save(childEntity.get());
             return com.veda.central.core.user.profile.api.Status.newBuilder().setStatus(true).build();
 
         } catch (Exception ex) {

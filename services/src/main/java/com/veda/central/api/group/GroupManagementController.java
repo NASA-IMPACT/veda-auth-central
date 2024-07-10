@@ -418,13 +418,13 @@ public class GroupManagementController {
             }
     )
     public ResponseEntity<GetAllGroupsResponse> searchGroups(
-            @RequestParam(required = false) String name,
-            @RequestParam(required = false) String description,
-            @RequestParam(required = false) String id,
-            @RequestParam(required = false) Long createdTime,
-            @RequestParam(required = false) Long lastModifiedTime,
-            @RequestParam(defaultValue = "0") int offset,
-            @RequestParam(defaultValue = "20") int limit,
+            @RequestParam(name = "name", defaultValue = "", required = false) String name,
+            @RequestParam(name = "description", defaultValue = "", required = false) String description,
+            @RequestParam(name = "id", defaultValue = "", required = false) String id,
+            @RequestParam(name = "created_time", defaultValue = "0", required = false) Long createdTime,
+            @RequestParam(name = "last_modified_time", defaultValue = "0", required = false) Long lastModifiedTime,
+            @RequestParam(name = "offset", defaultValue = "0") int offset,
+            @RequestParam(name = "limit", defaultValue = "20") int limit,
             @RequestHeader HttpHeaders headers) {
 
         AuthClaim authClaim = authorize(headers);
@@ -446,7 +446,8 @@ public class GroupManagementController {
                 .setLimit(limit)
                 .build();
 
-        return ResponseEntity.ok(groupManagementService.getAllGroups(groupRequest));
+        GetAllGroupsResponse groups = groupManagementService.getAllGroups(groupRequest);
+        return ResponseEntity.ok(groups);
     }
 
     @DeleteMapping("/groups/{groupId}/members/{userId}")
