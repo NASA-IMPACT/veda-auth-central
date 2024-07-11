@@ -97,6 +97,7 @@
         <spring.cloud.vault.version>4.0.1</spring.cloud.vault.version>
         <springdoc.version>2.5.0</springdoc.version>
         <protobuf.json.version>0.9.15</protobuf.json.version>
+        <nimbusds.jwt.version>9.40</nimbusds.jwt.version>
     </properties>
 
     <build>

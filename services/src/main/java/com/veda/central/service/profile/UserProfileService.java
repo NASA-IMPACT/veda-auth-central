@@ -64,13 +64,16 @@ import org.springframework.stereotype.Service;
 import javax.ws.rs.NotFoundException;
 import java.text.MessageFormat;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicReference;
+import java.util.stream.Collectors;
 
 @Service
 public class UserProfileService {
@@ -1083,6 +1086,25 @@ public class UserProfileService {
             String msg = "Error occurred while checking access to   in   tenant" + request.getTenantId() + " with id " + request.getUsername() + " to " + request.getType();
             LOGGER.error(msg);
             throw new RuntimeException(msg, ex);
+        }
+    }
+
+    public List<String> getAllGroupIDsOfUser(UserProfileRequest request) {
+        try {
+            LOGGER.debug("Request received to getAllGroupsOfUser for " + request.getTenantId());
+
+            long tenantId = request.getTenantId();
+            String username = request.getProfile().getUsername();
+            String userId = username + "@" + tenantId;
+
+            List<UserGroupMembership> userGroupMemberships = groupMembershipRepository.findAllByUserProfileId(userId);
+            return userGroupMemberships.stream()
+                    .map(membership -> membership.getGroup().getId())
+                    .filter(Objects::nonNull)
+                    .collect(Collectors.toList());
+
+        } catch (Exception ex) {
+            return Collections.emptyList();
         }
     }
 

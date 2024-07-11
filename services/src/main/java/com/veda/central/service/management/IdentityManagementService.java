@@ -43,6 +43,7 @@ import com.veda.central.core.tenant.profile.api.GetTenantRequest;
 import com.veda.central.core.tenant.profile.api.GetTenantResponse;
 import com.veda.central.core.tenant.profile.api.Tenant;
 import com.veda.central.core.user.profile.api.UserProfile;
+import com.veda.central.service.auth.TokenService;
 import com.veda.central.service.credential.store.CredentialStoreService;
 import com.veda.central.service.exceptions.InternalServerException;
 import com.veda.central.service.identity.Constants;
@@ -72,13 +73,15 @@ public class IdentityManagementService {
     private final TenantProfileService tenantProfileService;
     private final CredentialStoreService credentialStoreService;
     private final UserProfileService userProfileService;
+    private final TokenService tokenService;
 
 
-    public IdentityManagementService(IdentityService identityService, TenantProfileService tenantProfileService, CredentialStoreService credentialStoreService, UserProfileService userProfileService) {
+    public IdentityManagementService(IdentityService identityService, TenantProfileService tenantProfileService, CredentialStoreService credentialStoreService, UserProfileService userProfileService, TokenService tokenService) {
         this.identityService = identityService;
         this.tenantProfileService = tenantProfileService;
         this.credentialStoreService = credentialStoreService;
         this.userProfileService = userProfileService;
+        this.tokenService = tokenService;
     }
 
     /**
@@ -276,7 +279,8 @@ public class IdentityManagementService {
                 }
             });
 
-            return response;
+            String s = tokenService.generateWithCustomClaims(response.getAccessToken(), request.getTenantId());
+            return response.toBuilder().setAccessToken(s).build();
 
         } catch (Exception ex) {
             String msg = "Exception occurred while fetching access token " + ex.getMessage();

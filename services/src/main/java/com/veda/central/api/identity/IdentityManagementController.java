@@ -19,6 +19,8 @@
 
 package com.veda.central.api.identity;
 
+import com.nimbusds.jose.jwk.JWKSet;
+import com.nimbusds.jose.jwk.RSAKey;
 import com.veda.central.core.credential.store.api.Credentials;
 import com.veda.central.core.identity.api.AuthToken;
 import com.veda.central.core.identity.api.AuthenticationRequest;
@@ -36,6 +38,7 @@ import com.veda.central.core.identity.management.api.AuthorizationResponse;
 import com.veda.central.core.identity.management.api.EndSessionRequest;
 import com.veda.central.core.identity.management.api.GetCredentialsRequest;
 import com.veda.central.service.auth.AuthClaim;
+import com.veda.central.service.auth.KeyLoader;
 import com.veda.central.service.auth.TokenAuthorizer;
 import com.veda.central.service.credential.store.Credential;
 import com.veda.central.service.credential.store.CredentialManager;
@@ -52,6 +55,7 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -62,9 +66,9 @@ import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.server.ResponseStatusException;
 
 import java.net.URI;
-import java.net.URLEncoder;
-import java.nio.charset.StandardCharsets;
-import java.util.Base64;
+import java.security.KeyPair;
+import java.security.interfaces.RSAPublicKey;
+import java.util.Collections;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
@@ -76,10 +80,12 @@ public class IdentityManagementController {
 
     private final IdentityManagementService identityManagementService;
     private final TokenAuthorizer tokenAuthorizer;
+    private final KeyLoader keyLoader;
 
-    public IdentityManagementController(IdentityManagementService identityManagementService, TokenAuthorizer tokenAuthorizer) {
+    public IdentityManagementController(IdentityManagementService identityManagementService, TokenAuthorizer tokenAuthorizer, KeyLoader keyLoader) {
         this.identityManagementService = identityManagementService;
         this.tokenAuthorizer = tokenAuthorizer;
+        this.keyLoader = keyLoader;
     }
 
     @PostMapping("/authenticate")
@@ -498,6 +504,18 @@ public class IdentityManagementController {
                 .build();
         OIDCConfiguration response = identityManagementService.getOIDCConfiguration(request);
         return ResponseEntity.ok(response);
+    }
+
+    @GetMapping("/jwks.json")
+    public JWKSet keys() {
+        KeyPair keyPair = keyLoader.getKeyPair();
+        RSAPublicKey rsaPublicKey = (RSAPublicKey) keyPair.getPublic();
+
+        RSAKey rsaKey = new RSAKey.Builder(rsaPublicKey)
+                .keyID(keyLoader.getKeyID())
+                .build();
+
+        return new JWKSet(Collections.singletonList(rsaKey));
     }
 
 
