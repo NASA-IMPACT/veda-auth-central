@@ -1327,7 +1327,13 @@ public class UserManagementService {
 
     public Map<String, Object> getUserInfo(String accessToken, long tenantId) {
         try {
-            return iamAdminService.getUserInfo(accessToken, tenantId);
+            Map<String, Object> userInfo = iamAdminService.getUserInfo(accessToken, tenantId);
+            com.veda.central.core.user.profile.api.UserProfileRequest request = com.veda.central.core.user.profile.api.UserProfileRequest.newBuilder()
+                    .setTenantId(tenantId)
+                    .setProfile(UserProfile.newBuilder().setUsername(String.valueOf(userInfo.get("email"))).build())
+                    .build();
+            userInfo.put("groups", userProfileService.getAllGroupIDsOfUser(request));
+            return userInfo;
         } catch (ParseException e) {
             throw new IllegalArgumentException("Error while extracting userinfo");
         }

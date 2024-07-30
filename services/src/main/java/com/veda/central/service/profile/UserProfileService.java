@@ -1099,7 +1099,7 @@ public class UserProfileService {
 
             List<UserGroupMembership> userGroupMemberships = groupMembershipRepository.findAllByUserProfileId(userId);
             return userGroupMemberships.stream()
-                    .map(membership -> membership.getGroup().getId())
+                    .map(membership -> membership.getGroup().getExternalId())
                     .filter(Objects::nonNull)
                     .collect(Collectors.toList());
 
