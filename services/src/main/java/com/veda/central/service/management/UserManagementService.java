@@ -67,6 +67,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
+import java.text.ParseException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -1325,7 +1326,11 @@ public class UserManagementService {
     }
 
     public Map<String, Object> getUserInfo(String accessToken, long tenantId) {
-        return iamAdminService.getUserInfo(accessToken, tenantId);
+        try {
+            return iamAdminService.getUserInfo(accessToken, tenantId);
+        } catch (ParseException e) {
+            throw new IllegalArgumentException("Error while extracting userinfo");
+        }
     }
 
     private UserProfile convertToProfile(UserRepresentation representation) {

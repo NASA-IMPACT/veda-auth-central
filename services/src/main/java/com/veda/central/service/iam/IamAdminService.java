@@ -70,6 +70,7 @@ import com.veda.central.core.iam.api.UserGroupMappingRequest;
 import com.veda.central.core.iam.api.UserSearchRequest;
 import com.veda.central.core.model.commons.OperationStatus;
 import com.veda.central.core.model.commons.StatusEntity;
+import com.veda.central.service.auth.TokenService;
 import com.veda.central.service.federated.client.keycloak.KeycloakClient;
 import com.veda.central.service.federated.client.keycloak.KeycloakClientSecret;
 import jakarta.persistence.EntityNotFoundException;
@@ -84,6 +85,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
+import java.text.ParseException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -100,12 +102,15 @@ public class IamAdminService {
 
     private final StatusUpdater statusUpdater;
 
+    private final TokenService tokenService;
+
     @Value("${iam.server.url:https://auth.veda.usecustos.org/auth/}")
     private String iamServerURL;
 
-    public IamAdminService(KeycloakClient keycloakClient, StatusUpdater statusUpdater) {
+    public IamAdminService(KeycloakClient keycloakClient, StatusUpdater statusUpdater, TokenService tokenService) {
         this.keycloakClient = keycloakClient;
         this.statusUpdater = statusUpdater;
+        this.tokenService = tokenService;
     }
 
     public SetUpTenantResponse setUPTenant(SetUpTenantRequest request) {
@@ -1755,8 +1760,8 @@ public class IamAdminService {
         return iamServerURL;
     }
 
-    public Map<String, Object> getUserInfo(String accessToken, long tenantId) {
-        return keycloakClient.getUserInfo(accessToken, tenantId);
+    public Map<String, Object> getUserInfo(String accessToken, long tenantId) throws ParseException {
+        return keycloakClient.getUserInfo(tokenService.getKCToken(accessToken), tenantId);
     }
 
     private com.veda.central.core.iam.api.UserRepresentation getUser(UserRepresentation representation, String clientId) {

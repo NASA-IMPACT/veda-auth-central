@@ -33,9 +33,12 @@ import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.cache.Cache;
+import org.springframework.cache.CacheManager;
 import org.springframework.stereotype.Service;
 
 import java.security.KeyPair;
+import java.text.ParseException;
 import java.util.List;
 
 @Service
@@ -45,11 +48,13 @@ public class TokenService {
 
     private final KeyLoader keyLoader;
     private final UserProfileService userProfileService;
+    private final CacheManager cacheManager;
 
     @Autowired
-    public TokenService(KeyLoader keyLoader, UserProfileService userProfileService) {
+    public TokenService(KeyLoader keyLoader, UserProfileService userProfileService, CacheManager cacheManager) {
         this.keyLoader = keyLoader;
         this.userProfileService = userProfileService;
+        this.cacheManager = cacheManager;
     }
 
 
@@ -73,6 +78,7 @@ public class TokenService {
                 List<String> allGroupIDsOfUser = userProfileService.getAllGroupIDsOfUser(request);
                 newClaims = new JWTClaimsSet.Builder(oldClaims)
                         .claim("groups", allGroupIDsOfUser)
+                        .claim("iss", "https://" + tenantId + ".veda-auth-central.org")
                         .build();
             }
 
@@ -90,7 +96,29 @@ public class TokenService {
         JWSSigner signer = new RSASSASigner(keyPair.getPrivate());
         newSignedJWT.sign(signer);
 
+        cacheToken(newClaims.getJWTID(), token);
         return newSignedJWT.serialize();
+    }
+
+    public String getKCToken(String customizedToken) throws ParseException {
+        SignedJWT signedJWT = SignedJWT.parse(customizedToken);
+        String jwtId = signedJWT.getJWTClaimsSet().getJWTID();
+        Cache cache = cacheManager.getCache("KCTokenCache");
+        if (cache != null) {
+            Cache.ValueWrapper valueWrapper = cache.get(jwtId);
+            if (valueWrapper != null) {
+                return (String) valueWrapper.get();
+            }
+        }
+
+        return null;
+    }
+
+    private void cacheToken(String jti, String token) {
+        Cache cache = cacheManager.getCache("KCTokenCache");
+        if (cache != null) {
+            cache.put(jti, token);
+        }
     }
 
 }

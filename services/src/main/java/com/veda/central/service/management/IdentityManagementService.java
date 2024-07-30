@@ -52,12 +52,14 @@ import com.veda.central.service.profile.TenantProfileService;
 import com.veda.central.service.profile.UserProfileService;
 import io.grpc.Context;
 import org.apache.commons.lang3.StringUtils;
+import org.json.JSONObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
+import java.text.ParseException;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -201,7 +203,7 @@ public class IdentityManagementService {
             com.veda.central.core.identity.api.AuthorizationResponse response = identityService.getAuthorizeEndpoint(getAuthorizationEndpointRequest);
             String endpoint = response.getAuthorizationEndpoint();
 
-            String query =  "client_id=" + encode(iamMetadata.getId()) + "&" +
+            String query = "client_id=" + encode(iamMetadata.getId()) + "&" +
                     "redirect_uri=" + encode(request.getRedirectUri()) + "&" +
                     "response_type=" + encode(Constants.AUTHORIZATION_CODE) + "&" +
                     "scope=" + encode(request.getScope().contains("openid") ? request.getScope() : request.getScope() + " openid") + "&" +
@@ -222,6 +224,7 @@ public class IdentityManagementService {
     private String encode(String part) {
         return URLEncoder.encode(part, StandardCharsets.UTF_8);
     }
+
     /**
      * Retrieves the access token for the user based on the provided token request.
      *
@@ -327,7 +330,7 @@ public class IdentityManagementService {
      * @param request an object of type GetCredentialsRequest containing the request for credentials
      * @return an object of type Credentials representing the retrieved credentials
      * @throws IllegalArgumentException if no matching credential is found for the defined client Id in the request
-     * @throws InternalServerException if an exception occurs while retrieving the credentials
+     * @throws InternalServerException  if an exception occurs while retrieving the credentials
      */
     public Credentials getCredentials(GetCredentialsRequest request) {
         try {
@@ -363,6 +366,24 @@ public class IdentityManagementService {
             String msg = "Exception occurred while fetching agent access token " + ex.getMessage();
             LOGGER.error(msg);
             throw new InternalServerException(msg, ex);
+        }
+    }
+
+    public JSONObject introspectToken(String clientId, String clientSecret, String tenantId, String token) {
+        try {
+            String kcToken = tokenService.getKCToken(token);
+            if (kcToken == null) {
+                JSONObject json = new JSONObject();
+                json.put("active", false);
+                return json;
+            }
+
+            return identityService.tokenIntrospection(clientId, clientSecret, tenantId, kcToken);
+
+        } catch (ParseException e) {
+            String msg = "Error while extracting initial KC token";
+            LOGGER.error(msg, e);
+            throw new InternalServerException(msg, e);
         }
     }
 }

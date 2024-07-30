@@ -52,6 +52,8 @@ import com.veda.central.service.auth.AuthClaim;
 import com.veda.central.service.auth.TokenAuthorizer;
 import com.veda.central.service.management.UserManagementService;
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.enums.ParameterIn;
 import io.swagger.v3.oas.annotations.media.ArraySchema;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
@@ -721,13 +723,22 @@ public class UserManagementController {
 
     @GetMapping("/userinfo")
     @Operation(
-            summary = "Retrieve User Info"
+            summary = "Retrieve User Info",
+            parameters = {
+                    @Parameter(
+                            name = "client_id",
+                            in = ParameterIn.HEADER,
+                            description = "The client ID initiating the group membership type removal request",
+                            required = true,
+                            schema = @Schema(type = "string")
+                    )
+            }
     )
-    public ResponseEntity<Object> userInfo(@RequestParam("access_token") String accessToken, @RequestHeader HttpHeaders headers) {
-        Optional<AuthClaim> claim = tokenAuthorizer.authorize(headers);
+    public ResponseEntity<Object> userInfo(@RequestHeader HttpHeaders headers) {
+        Optional<AuthClaim> claim = tokenAuthorizer.authorize(headers, headers.getFirst("client_id"));
 
         if (claim.isPresent()) {
-            Map<String, Object> userInfo = userManagementService.getUserInfo(accessToken, claim.get().getTenantId());
+            Map<String, Object> userInfo = userManagementService.getUserInfo(tokenAuthorizer.getToken(headers), claim.get().getTenantId());
             return ResponseEntity.ok(userInfo);
 
         } else {

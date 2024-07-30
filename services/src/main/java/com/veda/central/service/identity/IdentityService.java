@@ -41,6 +41,7 @@ import com.veda.central.core.identity.authzcache.AuthzCacheIndex;
 import com.veda.central.core.identity.authzcache.AuthzCachedStatus;
 import com.veda.central.core.identity.authzcache.DefaultAuthzCacheManager;
 import com.veda.central.core.identity.exceptions.AuthSecurityException;
+import com.veda.central.service.auth.TokenService;
 import com.veda.central.service.federated.client.keycloak.auth.KeycloakAuthClient;
 import org.apache.http.HttpStatus;
 import org.json.JSONArray;
@@ -72,8 +73,14 @@ public class IdentityService {
     @Autowired
     private DefaultAuthzCacheManager authzCacheManager;
 
+    @Autowired
+    private TokenService tokenService;
+
     @Value("${veda-auth.identity.auth.cache.enabled:false}")
     private boolean isAuthzCacheEnabled;
+
+    @Value("${veda-auth.api.domain}")
+    private String apiDomain;
 
     public AuthToken authenticate(AuthenticationRequest request) {
         try {
@@ -186,7 +193,7 @@ public class IdentityService {
                 }
 
             } else {
-                isAuthenticated = keycloakAuthClient.isUserAuthenticated(username, tenantId, accessToken);
+                isAuthenticated = keycloakAuthClient.isUserAuthenticated(username, tenantId, tokenService.getKCToken(accessToken));
             }
 
             if (isAuthenticated) {
@@ -245,7 +252,8 @@ public class IdentityService {
                         keycloakAuthClient.getAccessTokenFromRefreshTokenGrantType(clientId, clientSecret, tenantId, request.getRefreshToken());
                 case Constants.CLIENT_CREDENTIALS ->
                         keycloakAuthClient.getAccessTokenFromClientCredentialsGrantType(clientId, clientSecret, tenantId);
-                default -> keycloakAuthClient.getAccessToken(clientId, clientSecret, tenantId, request.getCode(), request.getRedirectUri());
+                default ->
+                        keycloakAuthClient.getAccessToken(clientId, clientSecret, tenantId, request.getCode(), request.getRedirectUri());
             };
 
             try {
@@ -287,11 +295,11 @@ public class IdentityService {
             JSONObject object = keycloakAuthClient.getOIDCConfiguration(String.valueOf(request.getTenantId()), request.getClientId());
 
             return OIDCConfiguration.newBuilder()
-                    .setIssuer(object.optString("issuer"))
-                    .setAuthorizationEndpoint(object.optString("authorization_endpoint"))
-                    .setTokenEndpoint(object.optString("token_endpoint"))
-                    .setUserinfoEndpoint(object.optString("userinfo_endpoint"))
-                    .setJwksUri(object.optString("jwks_uri"))
+                    .setIssuer("https://" + request.getTenantId() + ".veda-auth-central.org")
+                    .setAuthorizationEndpoint(apiDomain + "/api/v1/identity-management/authorize")
+                    .setTokenEndpoint(apiDomain + "/api/v1/identity-management/token")
+                    .setUserinfoEndpoint(apiDomain + "/api/v1/user-management/userinfo")
+                    .setJwksUri(apiDomain + "/api/v1/identity-management/.well-known/jwks.json")
                     .addAllResponseTypesSupported(jsonArrayToList(object.getJSONArray("response_types_supported")))
                     .addAllSubjectTypesSupported(jsonArrayToList(object.getJSONArray("subject_types_supported")))
                     .addAllIdTokenSigningAlgValuesSupported(jsonArrayToList(object.getJSONArray("id_token_signing_alg_values_supported")))
@@ -301,7 +309,7 @@ public class IdentityService {
                     .addAllIntrospectionEndpointAuthSigningAlgValuesSupported(jsonArrayToList(object.getJSONArray("introspection_endpoint_auth_signing_alg_values_supported")))
                     .setRequestParameterSupported(object.optBoolean("request_parameter_supported"))
                     .setPushedAuthorizationRequestEndpoint(object.optString("pushed_authorization_request_endpoint"))
-                    .setIntrospectionEndpoint(object.optString("introspection_endpoint"))
+                    .setIntrospectionEndpoint(apiDomain + "/api/v1/identity-management/token/introspect")
                     .setClaimsParameterSupported(object.optBoolean("claims_parameter_supported"))
                     .addAllIdTokenEncryptionEncValuesSupported(jsonArrayToList(object.getJSONArray("id_token_encryption_enc_values_supported")))
                     .addAllUserinfoEncryptionEncValuesSupported(jsonArrayToList(object.getJSONArray("userinfo_encryption_enc_values_supported")))
@@ -441,6 +449,14 @@ public class IdentityService {
             LOGGER.error(msg, ex);
             throw new RuntimeException(msg, ex);
         }
+    }
+
+    public JSONObject tokenIntrospection(String clientId, String clientSecret, String tenantId, String token) {
+        JSONObject object = keycloakAuthClient.tokenIntrospection(clientId, clientSecret, tenantId, token);
+        object.remove("realm_access");
+        object.remove("resource_access");
+        object.put("iss", "https://" + tenantId + ".veda-auth-central.org");
+        return object;
     }
 
     private TokenResponse generateTokenResponse(JSONObject object) throws Exception {

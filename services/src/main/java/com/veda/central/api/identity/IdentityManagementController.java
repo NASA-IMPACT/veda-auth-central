@@ -51,11 +51,11 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.media.SchemaProperty;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import org.json.JSONObject;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -506,7 +506,7 @@ public class IdentityManagementController {
         return ResponseEntity.ok(response);
     }
 
-    @GetMapping("/jwks.json")
+    @GetMapping("/.well-known/jwks.json")
     public JWKSet keys() {
         KeyPair keyPair = keyLoader.getKeyPair();
         RSAPublicKey rsaPublicKey = (RSAPublicKey) keyPair.getPublic();
@@ -516,6 +516,43 @@ public class IdentityManagementController {
                 .build();
 
         return new JWKSet(Collections.singletonList(rsaKey));
+    }
+
+    @PostMapping("/token/introspect")
+    @Operation(
+            summary = "Introspect Token",
+            description = "Validates and provides information about the provided access token.",
+            requestBody = @io.swagger.v3.oas.annotations.parameters.RequestBody(
+                    required = true,
+                    content = @Content(
+                            mediaType = "application/x-www-form-urlencoded",
+                            schemaProperties = {
+                                    @SchemaProperty(
+                                            name = "token",
+                                            schema = @Schema(
+                                                    type = "string",
+                                                    description = "The access token to introspect"
+                                            )
+                                    )
+                            }
+                    )
+            ),
+            responses = {
+                    @ApiResponse(responseCode = "200", description = "Successful introspection"),
+                    @ApiResponse(responseCode = "400", description = "Invalid request"),
+                    @ApiResponse(responseCode = "401", description = "Unauthorized client")
+            }
+    )
+    public ResponseEntity<?> introspectToken(@RequestParam Map<String, String> params) {
+        if (params.containsKey("client_id") && params.containsKey("client_secret") && params.containsKey("token")) {
+            JSONObject response = identityManagementService.introspectToken(params.get("client_id"), params.get("client_secret"),
+                    String.valueOf(params.get("client_id").split("-")[2]), params.get("token"));
+
+            return ResponseEntity.ok(response.toMap());
+
+        } else {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Missing required client_id, client_secret, or token params");
+        }
     }
 
 

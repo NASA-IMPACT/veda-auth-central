@@ -156,6 +156,34 @@ public class KeycloakAuthClient {
 
     }
 
+    public JSONObject tokenIntrospection(String clientId, String clientSecret, String realmId, String token) {
+        try {
+            String introspectionURL = getTokenIntrospectionEndpoint(realmId);
+
+            HttpPost httpPost = new HttpPost(introspectionURL);
+            String encoded = Base64.getEncoder().encodeToString((clientId + ":" + clientSecret).getBytes(StandardCharsets.UTF_8));
+            httpPost.setHeader(HttpHeaders.AUTHORIZATION, "Basic " + encoded);
+            List<NameValuePair> formParams = new ArrayList<>();
+            formParams.add(new BasicNameValuePair("client_id", clientId));
+            formParams.add(new BasicNameValuePair("client_secret", clientSecret));
+            formParams.add(new BasicNameValuePair("token", token));
+            UrlEncodedFormEntity entity = new UrlEncodedFormEntity(formParams, Consts.UTF_8);
+            httpPost.setEntity(entity);
+
+            try (CloseableHttpClient httpClient = HttpClients.createSystem();
+                 CloseableHttpResponse response = httpClient.execute(httpPost)) {
+                return new JSONObject(EntityUtils.toString(response.getEntity()));
+
+            } catch (IOException | JSONException e) {
+                LOGGER.error("Error while extracting the token from the OAuth Code", e);
+                throw new RuntimeException("Error while extracting the token from the OAuth Code", e);
+            }
+
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
+    }
+
     public JSONObject getAccessTokenFromPasswordGrantType(String clientId, String clientSecret, String realmId,
                                                           String username, String password) {
         try {
@@ -237,6 +265,12 @@ public class KeycloakAuthClient {
         String openIdConnectUrl = getOpenIDConfigurationUrl(realmId);
         JSONObject openIdConnectConfig = new JSONObject(getFromUrl(openIdConnectUrl, null));
         return openIdConnectConfig.getString("end_session_endpoint");
+    }
+
+    public String getTokenIntrospectionEndpoint(String realmId) throws Exception {
+        String openIdConnectUrl = getOpenIDConfigurationUrl(realmId);
+        JSONObject openIdConnectConfig = new JSONObject(getFromUrl(openIdConnectUrl, null));
+        return openIdConnectConfig.getString("introspection_endpoint");
     }
 
     public JSONObject getOIDCConfiguration(String tenantId, String clientId) throws Exception {
