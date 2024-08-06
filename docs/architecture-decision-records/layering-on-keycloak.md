@@ -9,8 +9,12 @@
 
 Veda Auth Central is designed to provide a centralized authentication and authorization service for a suite of VEDA applications. While Keycloak is being used as the core identity provider (IDP) interface, several key requirements have emerged that necessitate a custom layer on top of Keycloak. These requirements include fine-grained control over authorization policies, the ability to manage application-specific access controls, and the need to handle complex user onboarding and group management processes, which are not fully supported by Keycloak’s native capabilities.
 
+Within the open-source community, Keycloak is an established solution for authentication, while in the commercial sector, Auth0 is a popular choice. Both of these solutions offer standards-based authentication, leveraging protocols like OAuth2.0 and OpenID Connect. However, there is no widely accepted community standard for authorization, leading many applications to develop custom approaches. Although Keycloak provides advanced capabilities for authorization through scopes, the process of scope injection is complex and often involves JavaScript injection, making it less ideal for straightforward integration.
+
+For VEDA, we are leveraging the OAuth2.0 specification with Keycloak as the implementation for authentication. We are also standardizing and centralizing authorization across all VEDA applications, while enabling application-specific administration for enhanced fine-grained security.
+
 ## Decision
-A light-weight pass through custom layer will be implemented on top of Keycloak in Veda Auth Central to address the following needs:
+VEDA Auth Central deploys and manages out of the box open source Keycloack for VEDA Authentication Needs following DevSecOps best practices. In addition a lightweight, pass-through custom layer will be implemented on top of Keycloak in Veda Auth Central to address the following needs:
 
 1. **Authentication with Keycloak**:
    - Veda Auth Central utilizes Keycloak as the primary Identity Provider (IDP) interface, integrated with CILogon to support federated authentication. The Veda Auth Central backend proxies authentication requests to Keycloak, enabling centralized management and secure handling of user credentials across the VEDA ecosystem.
