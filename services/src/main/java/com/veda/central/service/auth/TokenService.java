@@ -26,6 +26,8 @@ import com.nimbusds.jose.JWSSigner;
 import com.nimbusds.jose.crypto.RSASSASigner;
 import com.nimbusds.jwt.JWTClaimsSet;
 import com.nimbusds.jwt.SignedJWT;
+import com.veda.central.core.model.user.Group;
+import com.veda.central.core.model.user.GroupRole;
 import com.veda.central.core.user.profile.api.UserProfile;
 import com.veda.central.core.user.profile.api.UserProfileRequest;
 import com.veda.central.service.profile.UserProfileService;
@@ -75,9 +77,21 @@ public class TokenService {
                         .setProfile(UserProfile.newBuilder().setUsername(email).build())
                         .build();
 
-                List<String> allGroupIDsOfUser = userProfileService.getAllGroupIDsOfUser(request);
+                List<Group> groups = userProfileService.getGroupsOfUser(request);
+
+                List<String> groupIds = groups.stream()
+                        .map(Group::getExternalId)
+                        .toList();
+
+                List<String> scopes = groups.stream()
+                        .flatMap(group -> group.getGroupRole().stream())
+                        .map(GroupRole::getValue)
+                        .distinct()
+                        .toList();
+
                 newClaims = new JWTClaimsSet.Builder(oldClaims)
-                        .claim("groups", allGroupIDsOfUser)
+                        .claim("groups", groupIds)
+                        .claim("scopes", scopes)
                         .claim("iss", "https://" + tenantId + ".veda-auth-central.org")
                         .build();
             }

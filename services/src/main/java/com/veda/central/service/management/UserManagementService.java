@@ -19,6 +19,8 @@
 
 package com.veda.central.service.management;
 
+import com.nimbusds.jwt.JWTClaimsSet;
+import com.nimbusds.jwt.SignedJWT;
 import com.veda.central.core.constants.Constants;
 import com.veda.central.core.iam.api.AddExternalIDPLinksRequest;
 import com.veda.central.core.iam.api.AddUserAttributesRequest;
@@ -1328,11 +1330,12 @@ public class UserManagementService {
     public Map<String, Object> getUserInfo(String accessToken, long tenantId) {
         try {
             Map<String, Object> userInfo = iamAdminService.getUserInfo(accessToken, tenantId);
-            com.veda.central.core.user.profile.api.UserProfileRequest request = com.veda.central.core.user.profile.api.UserProfileRequest.newBuilder()
-                    .setTenantId(tenantId)
-                    .setProfile(UserProfile.newBuilder().setUsername(String.valueOf(userInfo.get("email"))).build())
-                    .build();
-            userInfo.put("groups", userProfileService.getAllGroupIDsOfUser(request));
+
+            SignedJWT signedJWT = SignedJWT.parse(accessToken);
+            JWTClaimsSet claims = signedJWT.getJWTClaimsSet();
+            userInfo.put("groups", claims.getClaim("groups"));
+            userInfo.put("scopes", claims.getClaim("scopes"));
+
             return userInfo;
         } catch (ParseException e) {
             throw new IllegalArgumentException("Error while extracting userinfo");

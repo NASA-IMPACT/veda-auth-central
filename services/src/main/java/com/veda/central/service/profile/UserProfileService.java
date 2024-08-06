@@ -1089,7 +1089,7 @@ public class UserProfileService {
         }
     }
 
-    public List<String> getAllGroupIDsOfUser(UserProfileRequest request) {
+    public List<Group> getGroupsOfUser(UserProfileRequest request) {
         try {
             LOGGER.debug("Request received to getAllGroupsOfUser for " + request.getTenantId());
 
@@ -1099,7 +1099,7 @@ public class UserProfileService {
 
             List<UserGroupMembership> userGroupMemberships = groupMembershipRepository.findAllByUserProfileId(userId);
             return userGroupMemberships.stream()
-                    .map(membership -> membership.getGroup().getExternalId())
+                    .map(UserGroupMembership::getGroup)
                     .filter(Objects::nonNull)
                     .collect(Collectors.toList());
 

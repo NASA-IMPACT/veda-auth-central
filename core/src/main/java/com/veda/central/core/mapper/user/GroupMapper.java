@@ -137,6 +137,7 @@ public class GroupMapper {
                     realmRoles.add(role.getValue());
                 }
             });
+            groupBuilder.addAllClientRoles(clientRoles).addAllRealmRoles(realmRoles);
         }
 
         List<com.veda.central.core.user.profile.api.GroupAttribute> attributeList = new ArrayList<>();
@@ -147,8 +148,6 @@ public class GroupMapper {
                 atrMap.computeIfAbsent(atr.getKeyValue(), k -> new ArrayList<>());
                 atrMap.get(atr.getKeyValue()).add(atr.getValue());
             });
-
-            groupBuilder.addAllClientRoles(clientRoles).addAllRealmRoles(realmRoles);
         }
 
         atrMap.keySet().forEach(key -> {
