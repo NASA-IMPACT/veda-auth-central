@@ -210,6 +210,11 @@ public class IdentityManagementService {
                     "state=" + encode(request.getState()) + "&" +
                     "kc_idp_hint=oidc";
 
+            if (StringUtils.isNotBlank(request.getCodeChallenge()) && StringUtils.isNotBlank(request.getCodeChallengeMethod())) {
+                query += "&code_challenge=" + encode(request.getCodeChallenge()) +
+                        "&code_challenge_method=" + encode(request.getCodeChallengeMethod());
+            }
+
             String loginURL = endpoint + "?" + query;
 
             return AuthorizationResponse.newBuilder().setRedirectUri(loginURL).build();

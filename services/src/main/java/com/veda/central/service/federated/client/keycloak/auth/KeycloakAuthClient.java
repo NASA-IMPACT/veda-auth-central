@@ -20,6 +20,7 @@
 package com.veda.central.service.federated.client.keycloak.auth;
 
 import com.veda.central.service.federated.client.keycloak.KeycloakUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.http.Consts;
 import org.apache.http.HttpHeaders;
 import org.apache.http.NameValuePair;
@@ -144,10 +145,10 @@ public class KeycloakAuthClient {
     }
 
     public JSONObject getAccessToken(String clientId, String clientSecret, String realmId, String code,
-                                     String redirectUri) throws JSONException {
+                                     String redirectUri, String codeVerifier) throws JSONException {
         try {
             String tokenURL = getTokenEndpoint(realmId);
-            return getTokenFromOAuthCode(tokenURL, clientId, clientSecret, code, redirectUri);
+            return getTokenFromOAuthCode(tokenURL, clientId, clientSecret, code, redirectUri, codeVerifier);
 
         } catch (Exception e) {
             LOGGER.error("Error occurred while retrieving the access token", e);
@@ -337,16 +338,21 @@ public class KeycloakAuthClient {
         }
     }
 
-    private JSONObject getTokenFromOAuthCode(String tokenURL, String clientId, String clientSecret, String code, String redirect_uri) {
+    private JSONObject getTokenFromOAuthCode(String tokenURL, String clientId, String clientSecret, String code, String redirect_uri, String codeVerifier) {
         HttpPost httpPost = new HttpPost(tokenURL);
         String encoded = Base64.getEncoder().encodeToString((clientId + ":" + clientSecret).getBytes(StandardCharsets.UTF_8));
         httpPost.setHeader(HttpHeaders.AUTHORIZATION, "Basic " + encoded);
+
         List<NameValuePair> formParams = new ArrayList<>();
         formParams.add(new BasicNameValuePair("grant_type", "authorization_code"));
         formParams.add(new BasicNameValuePair("code", code));
         formParams.add(new BasicNameValuePair("redirect_uri", redirect_uri));
         formParams.add(new BasicNameValuePair("client_id", clientId));
         formParams.add(new BasicNameValuePair("client_secret", clientSecret));
+        if (StringUtils.isNotBlank(codeVerifier)) {
+            formParams.add(new BasicNameValuePair("code_verifier", codeVerifier));
+        }
+
         UrlEncodedFormEntity entity = new UrlEncodedFormEntity(formParams, Consts.UTF_8);
         httpPost.setEntity(entity);
 

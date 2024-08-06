@@ -253,7 +253,7 @@ public class IdentityService {
                 case Constants.CLIENT_CREDENTIALS ->
                         keycloakAuthClient.getAccessTokenFromClientCredentialsGrantType(clientId, clientSecret, tenantId);
                 default ->
-                        keycloakAuthClient.getAccessToken(clientId, clientSecret, tenantId, request.getCode(), request.getRedirectUri());
+                        keycloakAuthClient.getAccessToken(clientId, clientSecret, tenantId, request.getCode(), request.getRedirectUri(), request.getCodeVerifier());
             };
 
             try {

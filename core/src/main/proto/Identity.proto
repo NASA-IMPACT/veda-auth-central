@@ -55,6 +55,7 @@ message GetTokenRequest {
     string password = 8;
     string refresh_token = 9;
     string grant_type = 10;
+    string code_verifier = 11;
 }
 
 message TokenResponse {

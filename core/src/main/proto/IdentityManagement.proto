@@ -35,6 +35,8 @@ message AuthorizationRequest {
   string response_type = 5;
   string scope = 6;
   string state = 7;
+  string code_challenge = 8;
+  string code_challenge_method = 9;
 }
 
 message AuthorizationResponse {

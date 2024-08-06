@@ -51,6 +51,7 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.media.SchemaProperty;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import org.apache.commons.lang3.StringUtils;
 import org.json.JSONObject;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
@@ -331,7 +332,9 @@ public class IdentityManagementController {
             @RequestParam(value = "redirect_uri") String redirectUri,
             @RequestParam(value = "scope") String scope,
             @RequestParam(value = "state") String state,
-            @RequestParam(value = "response_type") String responseType) {
+            @RequestParam(value = "response_type") String responseType,
+            @RequestParam(value = "code_challenge", required = false) String codeChallenge,
+            @RequestParam(value = "code_challenge_method", required = false) String codeChallengeMethod) {
 
         AuthorizationRequest request = AuthorizationRequest.newBuilder()
                 .setClientId(clientId)
@@ -339,6 +342,8 @@ public class IdentityManagementController {
                 .setScope(scope)
                 .setState(state)
                 .setResponseType(responseType)
+                .setCodeChallenge(StringUtils.isNotBlank(codeChallenge) ? codeChallenge: "")
+                .setCodeChallengeMethod(StringUtils.isNotBlank(codeChallengeMethod) ? codeChallengeMethod: "")
                 .build();
         AuthorizationResponse response = identityManagementService.authorize(request);
         return ResponseEntity.status(HttpStatus.FOUND).location(URI.create(response.getRedirectUri())).build();
@@ -442,6 +447,7 @@ public class IdentityManagementController {
         GetTokenRequest request = GetTokenRequest.newBuilder()
                 .setRedirectUri(params.get("redirect_uri"))
                 .setCode(params.get("code"))
+                .setCodeVerifier(params.getOrDefault("code_verifier", ""))
                 .setGrantType(params.get("grant_type"))
                 .setClientId(credential.getId())
                 .setTenantId(Long.parseLong(credential.getId().split("-")[2])) // TODO This is very risky. Find a different way to figure out tenant id
