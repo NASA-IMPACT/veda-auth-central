@@ -10,22 +10,28 @@
 Veda Auth Central is designed to provide a centralized authentication and authorization service for a suite of VEDA applications. While Keycloak is being used as the core identity provider (IDP) interface, several key requirements have emerged that necessitate a custom layer on top of Keycloak. These requirements include fine-grained control over authorization policies, the ability to manage application-specific access controls, and the need to handle complex user onboarding and group management processes, which are not fully supported by Keycloak’s native capabilities.
 
 ## Decision
-A custom layer will be implemented on top of Keycloak in Veda Auth Central to address the following needs:
+A light-weight pass through custom layer will be implemented on top of Keycloak in Veda Auth Central to address the following needs:
 
-1. **Fine-Grained Authorization Management:**
-   - **Centralized Control**: The custom layer will provide centralized management of fine-grained authorization, allowing for specific scopes and roles to be defined and enforced for each VEDA application. This includes the ability to manage service-specific access policies such as `grafana:user`, `grafana:admin`, `stac:editor`, and `stac:reader`.
+1. **Authentication with Keycloak**:
+   - Veda Auth Central utilizes Keycloak as the primary Identity Provider (IDP) interface, integrated with CILogon to support federated authentication. The Veda Auth Central backend proxies authentication requests to Keycloak, enabling centralized management and secure handling of user credentials across the VEDA ecosystem.
+
+2. **Proxying Authentication Requests**:
+   - The authentication process is proxied through Veda Auth Central to capture and enrich the access token issued by Keycloak. This allows the system to extract IDP-specific metadata and append VEDA-specific authorization scopes to the final token, ensuring that the token returned to the user is customized and fully aligned with the application's security requirements.
+
+3. **Application Catalog and Identity Integration**:
+   - In addition to managing the general authorization flow, the Veda Auth Central backend provides an advanced application catalog feature. This catalog allows service administrators to easily register VEDA applications and quickly integrate them with the identity management system, streamlining the process of identity and access management for new and existing applications.
+   - **Application-Specific Entities**: The application catalog introduces the concept of an application entity within Auth Central, enabling each VEDA app deployment to be managed as a distinct security entity. This approach allows administrators to tailor service-level access policies and user roles to the specific needs of each application, minimizing the risk of misconfiguration or policy overlap across different applications.
+   - **Reusable Templates**: To further simplify the management process, administrators can create and manage templates for common application types (e.g., Grafana, STAC, Hub). These templates come with predefined scopes and role requirements, which can be easily applied when registering new applications, ensuring consistent security configurations and reducing setup time.
+
+4. **User Enrichment and Onboarding**:
+   - Veda Auth Central includes a comprehensive user enrichment module that centralizes the onboarding process for new users across all applications. This module supports both manual and automated group assignments, ensuring that users are appropriately categorized and granted the correct access permissions from the start.
+   - **User Enrichment Module**: The custom layer within Veda Auth Central is responsible for handling user onboarding, offering a streamlined approach that includes both manual and automatic group assignments. These assignments are based on user attributes, such as organizational affiliation, or identity provider (IDP) metadata. This feature is essential for maintaining a clear and organized structure of user roles across multiple VEDA applications, ensuring consistency and security in access control.
+   - **Automated Group Assignments**: Unlike Keycloak, which does not have built-in support for automatic group assignments, Veda Auth Central’s custom layer introduces a visual policy enforcement interface. This interface allows administrators to automate group membership and role assignments based on user characteristics, significantly improving efficiency and reducing administrative overhead. By automating this process, Veda Auth Central ensures that users are seamlessly integrated into the appropriate groups and roles, enhancing the overall user management experience.
+
+5. **Fine-Grained Authorization Management:**
+   - **Centralized Control**: The custom layer will provide centralized management of fine-grained authorization, allowing for specific scopes and roles to be defined and enforced for each VEDA application. This includes the ability to manage service-specific access policies such as `grafana:user`, `grafana:admin`, `stac:editor`, `stac:reader`, `hub:vms:profile1`, and `hub:vms:profile2`.
    - **Complex Authorization Scenarios**: The custom layer will support advanced authorization scenarios, such as scope inheritance between applications. For instance, the VEDA Hub may need to inherit scopes from a STAC application, enabling seamless data access across related services.
 
-2. **Application Catalog and Management:**
-   - **Application-Specific Entities**: The custom layer introduces the concept of an application entity within Auth Central, allowing each VEDA app deployment to be managed as a distinct security entity. This approach ensures that administrators can manage service-level access policies and user roles specific to each application, without the risk of misconfiguration or overlap.
-   - **Reusable Templates**: Admins can create and manage templates for common application types (e.g., Grafana, STAC, Hub) with predefined scope and role requirements, streamlining the process of registering new applications.
-
-3. **Enhanced User Onboarding and Group Management:**
-   - **User Enrichment Module**: The custom layer will handle user onboarding, providing both manual and automatic group assignments based on user attributes or identity provider (IDP) metadata. This feature is crucial for maintaining a clear and organized structure of user roles across multiple applications.
-   - **Automated Group Assignments**: Unlike Keycloak, which lacks built-in support for automatic group assignments, the custom layer will include a visual policy enforcement interface to automate this process based on user characteristics, improving efficiency and reducing administrative overhead.
-
-4. **Proxying Authentication for Token Enrichment:**
-   - **Access Token Management**: The custom layer proxies authentication requests to Keycloak to handle and enrich access tokens with VEDA-specific authorization scopes and IDP-specific metadata. This functionality is essential for ensuring that the final tokens returned to users are fully compliant with VEDA’s security and authorization requirements.
 
 ## Drivers
 - **Supports Complex Authorization Needs**: The custom layer addresses specific authorization needs that are not natively supported by Keycloak, such as application-based user subscriptions, scope inheritance, and detailed access control for multiple environments (dev, staging, production).
@@ -63,7 +69,11 @@ A custom layer will be implemented on top of Keycloak in Veda Auth Central to ad
 
 ## Decision Outcome
 
-**Architectural Diagram of the proposed Layer**
+**Architectural Description**
+
+1. [VEDA Authentication Flows](../architecture/1-veda-authn-flow.md)
+2. [VEDA Authorization FLows](../architecture/2-veda-authz-flow.md)
+3. [VEDA Auth Central App-admin FLows](../architecture/3-vac-app-admin.md)
 
 
 ## Conclusion
