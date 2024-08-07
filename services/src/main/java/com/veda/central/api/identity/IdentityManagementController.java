@@ -19,7 +19,8 @@
 
 package com.veda.central.api.identity;
 
-import com.nimbusds.jose.jwk.JWKSet;
+import com.nimbusds.jose.jwk.JWK;
+import com.nimbusds.jose.jwk.KeyUse;
 import com.nimbusds.jose.jwk.RSAKey;
 import com.veda.central.core.credential.store.api.Credentials;
 import com.veda.central.core.identity.api.AuthToken;
@@ -69,7 +70,9 @@ import org.springframework.web.server.ResponseStatusException;
 import java.net.URI;
 import java.security.KeyPair;
 import java.security.interfaces.RSAPublicKey;
+import java.util.Base64;
 import java.util.Collections;
+import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
@@ -342,8 +345,8 @@ public class IdentityManagementController {
                 .setScope(scope)
                 .setState(state)
                 .setResponseType(responseType)
-                .setCodeChallenge(StringUtils.isNotBlank(codeChallenge) ? codeChallenge: "")
-                .setCodeChallengeMethod(StringUtils.isNotBlank(codeChallengeMethod) ? codeChallengeMethod: "")
+                .setCodeChallenge(StringUtils.isNotBlank(codeChallenge) ? codeChallenge : "")
+                .setCodeChallengeMethod(StringUtils.isNotBlank(codeChallengeMethod) ? codeChallengeMethod : "")
                 .build();
         AuthorizationResponse response = identityManagementService.authorize(request);
         return ResponseEntity.status(HttpStatus.FOUND).location(URI.create(response.getRedirectUri())).build();
@@ -420,12 +423,18 @@ public class IdentityManagementController {
             throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Request is not authorized");
         }*/
 
+        boolean isPKCEFlow = params.containsKey("code_verifier");
+
+        if (!isPKCEFlow && !headers.containsKey("authorization")) {
+            return ResponseEntity.badRequest().body("No client id and secret or code_verifier is provided in the request");
+        }
+
         // TODO: check if client_id and secret is in the params map. If so, do not check below
 
-        Credential credential = null;
-        if (params.containsKey("client_id") && params.containsKey("client_secret")) {
-            credential = new Credential(params.get("client_id"), params.get("client_secret"));
-
+        Credential credential;
+        if (isPKCEFlow) {
+            // If PKCE flow, only get the client ID
+            credential = new Credential(params.get("client_id"), "");
         } else {
             // This is fallback
             if (!headers.containsKey("authorization") || Objects.requireNonNull(headers.get("authorization")).isEmpty()) {
@@ -513,15 +522,26 @@ public class IdentityManagementController {
     }
 
     @GetMapping("/.well-known/jwks.json")
-    public JWKSet keys() {
+    public ResponseEntity<?> keys() {
         KeyPair keyPair = keyLoader.getKeyPair();
         RSAPublicKey rsaPublicKey = (RSAPublicKey) keyPair.getPublic();
 
-        RSAKey rsaKey = new RSAKey.Builder(rsaPublicKey)
+        JWK jwk = new RSAKey.Builder(rsaPublicKey)
                 .keyID(keyLoader.getKeyID())
+                .keyUse(KeyUse.SIGNATURE)
                 .build();
 
-        return new JWKSet(Collections.singletonList(rsaKey));
+        Map<String, Object> jwkMap = Map.of(
+                "kty", "RSA",
+                "alg", "RS256",
+                "use", "sig",
+                "kid", jwk.getKeyID(),
+                "n", Base64.getUrlEncoder().withoutPadding().encodeToString(rsaPublicKey.getModulus().toByteArray()),
+                "e", Base64.getUrlEncoder().withoutPadding().encodeToString(rsaPublicKey.getPublicExponent().toByteArray()),
+                "x5c", Collections.singletonList(Base64.getUrlEncoder().withoutPadding().encodeToString(rsaPublicKey.getEncoded()))
+        );
+
+        return ResponseEntity.ok(Map.of("keys", Collections.singletonList(jwkMap)));
     }
 
     @PostMapping("/token/introspect")

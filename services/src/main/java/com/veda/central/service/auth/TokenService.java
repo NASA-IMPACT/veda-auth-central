@@ -68,6 +68,7 @@ public class TokenService {
 
         JWTClaimsSet oldClaims = signedJWT.getJWTClaimsSet();
         String email = String.valueOf(oldClaims.getClaim("email"));
+        Set<String> existingScopes = new HashSet<>(Arrays.asList(((String) oldClaims.getClaim("scope")).split(" ")));
 
         JWTClaimsSet newClaims = null;
         try {
@@ -89,8 +90,11 @@ public class TokenService {
                         .distinct()
                         .toList();
 
+                existingScopes.addAll(scopes);
+
                 newClaims = new JWTClaimsSet.Builder(oldClaims)
                         .claim("groups", groupIds)
+                        .claim("scope", String.join(" ", existingScopes))
                         .claim("scopes", scopes)
                         .claim("iss", "https://" + tenantId + ".veda-auth-central.org")
                         .build();

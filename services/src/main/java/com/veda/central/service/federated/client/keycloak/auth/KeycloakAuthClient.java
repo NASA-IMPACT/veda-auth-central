@@ -340,17 +340,19 @@ public class KeycloakAuthClient {
 
     private JSONObject getTokenFromOAuthCode(String tokenURL, String clientId, String clientSecret, String code, String redirect_uri, String codeVerifier) {
         HttpPost httpPost = new HttpPost(tokenURL);
-        String encoded = Base64.getEncoder().encodeToString((clientId + ":" + clientSecret).getBytes(StandardCharsets.UTF_8));
-        httpPost.setHeader(HttpHeaders.AUTHORIZATION, "Basic " + encoded);
-
         List<NameValuePair> formParams = new ArrayList<>();
         formParams.add(new BasicNameValuePair("grant_type", "authorization_code"));
         formParams.add(new BasicNameValuePair("code", code));
         formParams.add(new BasicNameValuePair("redirect_uri", redirect_uri));
         formParams.add(new BasicNameValuePair("client_id", clientId));
-        formParams.add(new BasicNameValuePair("client_secret", clientSecret));
+
         if (StringUtils.isNotBlank(codeVerifier)) {
             formParams.add(new BasicNameValuePair("code_verifier", codeVerifier));
+        } else {
+            String encoded = Base64.getEncoder().encodeToString((clientId + ":" + clientSecret).getBytes(StandardCharsets.UTF_8));
+            httpPost.setHeader(HttpHeaders.AUTHORIZATION, "Basic " + encoded);
+
+            formParams.add(new BasicNameValuePair("client_secret", clientSecret));
         }
 
         UrlEncodedFormEntity entity = new UrlEncodedFormEntity(formParams, Consts.UTF_8);
