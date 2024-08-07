@@ -1,0 +1,15 @@
+version: "3.8"
+
+services:
+  api:
+    build: ./api
+    command: uvicorn main:app --host 0.0.0.0 --reload
+    volumes:
+      - ./api:/app
+    ports:
+      - "8000:8000"
+    environment:
+      - AUTH_PROVIDER_URL=https://api.veda.usecustos.org/api/v1/identity-management
+      - AUTH_PROVIDER_JWKS_URL=https://api.veda.usecustos.org/api/v1/identity-management/.well-known/jwks.json
+      - CLIENT_ID=veda-iui65nmkgaf7bihdyndc-10000000
+    restart: unless-stopped
