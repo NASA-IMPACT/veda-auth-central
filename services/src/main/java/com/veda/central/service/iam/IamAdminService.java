@@ -1764,6 +1764,12 @@ public class IamAdminService {
         return keycloakClient.getUserInfo(tokenService.getKCToken(accessToken), tenantId);
     }
 
+    public Map<String, String> configureClient(long tenantId, String clientId, String tenantUrl, List<String> redirectUris) {
+        KeycloakClientSecret clientSecret = keycloakClient.configureClient(String.valueOf(tenantId),
+                clientId, tenantUrl, redirectUris);
+        return Map.of("clientId", clientSecret.getClientId(), "clientSecret", clientSecret.getClientSecret());
+    }
+
     private com.veda.central.core.iam.api.UserRepresentation getUser(UserRepresentation representation, String clientId) {
         String state = Status.PENDING_CONFIRMATION;
 

@@ -83,6 +83,7 @@ import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 @Service
 public class TenantManagementService {
@@ -176,6 +177,17 @@ public class TenantManagementService {
             LOGGER.error(msg, ex);
             throw new IllegalArgumentException(msg, ex);
         }
+    }
+
+    public Map<String, String> addClient(long tenantId, String tenantUrl, List<String> redirectUris) {
+        GetTenantResponse tenant = tenantProfileService.getTenant(com.veda.central.core.tenant.profile.api.GetTenantRequest.newBuilder().setTenantId(tenantId).build());
+
+        GetNewVedaCredentialRequest req = GetNewVedaCredentialRequest.newBuilder()
+                .setOwnerId(tenant.getTenant().getTenantId())
+                .build();
+
+        CredentialMetadata resp = credentialStoreService.getNewVedaCredential(req);
+        return iamAdminService.configureClient(tenantId, resp.getId(), tenantUrl, redirectUris);
     }
 
     public Tenant getTenant(GetTenantRequest request) {

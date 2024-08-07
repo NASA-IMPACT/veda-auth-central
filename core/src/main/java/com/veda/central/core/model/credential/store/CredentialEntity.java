@@ -22,6 +22,8 @@ package com.veda.central.core.model.credential.store;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EntityListeners;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
 import jakarta.persistence.Temporal;
@@ -36,6 +38,10 @@ import java.util.Date;
 @EntityListeners(AuditingEntityListener.class)
 public class CredentialEntity {
 
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
+
     @Column(nullable = false)
     private String clientId;
 
@@ -47,13 +53,19 @@ public class CredentialEntity {
     @Column(nullable = false)
     private long clientSecretExpiredAt;
 
-    @Id
     @Column(nullable = false)
     private long ownerId;
 
     @Column(nullable = false)
     private String type;
 
+    public Long getId() {
+        return id;
+    }
+
+    public void setId(Long id) {
+        this.id = id;
+    }
 
     public String getClientId() {
         return clientId;

@@ -175,8 +175,8 @@ public class IdentityManagementService {
 
             GetCredentialRequest req = GetCredentialRequest.newBuilder().setId(request.getClientId()).build();
             CredentialMetadata metadata = credentialStoreService.getVedaCredentialFromClientId(req);
-            req = req.toBuilder().setType(Type.IAM).setOwnerId(metadata.getOwnerId()).build();
-            CredentialMetadata iamMetadata = credentialStoreService.getCredential(req);
+//            req = req.toBuilder().setType(Type.IAM).setOwnerId(metadata.getOwnerId()).build();
+//            CredentialMetadata iamMetadata = credentialStoreService.getCredential(req);
             GetTenantRequest tenantRequest = GetTenantRequest.newBuilder().setTenantId(metadata.getOwnerId()).build();
             GetTenantResponse tenantResponse = tenantProfileService.getTenant(tenantRequest);
             Tenant tenant = tenantResponse.getTenant();
@@ -203,7 +203,7 @@ public class IdentityManagementService {
             com.veda.central.core.identity.api.AuthorizationResponse response = identityService.getAuthorizeEndpoint(getAuthorizationEndpointRequest);
             String endpoint = response.getAuthorizationEndpoint();
 
-            String query = "client_id=" + encode(iamMetadata.getId()) + "&" +
+            String query = "client_id=" + encode(metadata.getId()) + "&" +
                     "redirect_uri=" + encode(request.getRedirectUri()) + "&" +
                     "response_type=" + encode(Constants.AUTHORIZATION_CODE) + "&" +
                     "scope=" + encode(request.getScope().contains("openid") ? request.getScope() : request.getScope() + " openid") + "&" +

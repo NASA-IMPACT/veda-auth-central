@@ -137,7 +137,7 @@ public class CredentialStoreService {
                     .setOwnerId(request.getOwnerId());
 
             if (request.getType() == Type.VEDA) {
-                Optional<CredentialEntity> entity = repository.findById(request.getOwnerId());
+                Optional<CredentialEntity> entity = repository.findByOwnerIdAndClientId(request.getOwnerId(), credential.getId());
                 if (entity.isPresent()) {
                     secret.setClientIdIssuedAt(entity.get().getIssuedAt().getTime());
                     secret.setClientSecretExpiredAt(entity.get().getClientSecretExpiredAt());
@@ -235,7 +235,7 @@ public class CredentialStoreService {
         try {
             LOGGER.debug("Generating veda credentials for  " + request.getOwnerId());
             Credential credential = credentialManager.generateCredential(request.getOwnerId(), CredentialTypes.VEDA, 0);
-            String path = BASE_PATH + request.getOwnerId() + "/" + CredentialTypes.VEDA.name();
+            String path = BASE_PATH + request.getOwnerId() + "/" + CredentialTypes.VEDA.name() + "/" + credential.getId();
             vaultTemplate.write(path, credential);
 
             VaultResponseSupport<Credential> response = vaultTemplate.read(path, Credential.class);
@@ -255,7 +255,7 @@ public class CredentialStoreService {
                     request.getOwnerId(),
                     null);
 
-            Optional<CredentialEntity> entity = repository.findById(request.getOwnerId());
+            Optional<CredentialEntity> entity = repository.findByOwnerIdAndClientId(request.getOwnerId(), credential.getId());
 
             if (entity.isEmpty()) {
                 String msg = "Credential is not persisted" + request.getOwnerId();
@@ -367,14 +367,20 @@ public class CredentialStoreService {
                 throw new EntityNotFoundException(msg);
             }
 
+            // TODO path should be considering the client too
             String path = BASE_PATH + entity.getOwnerId() + "/" + Type.VEDA.name();
 
             VaultResponseSupport<Credential> response = vaultTemplate.read(path, Credential.class);
 
             if (response == null || response.getData() == null) {
-                String msg = "Cannot find credentials for " + entity.getOwnerId() + " for type " + Type.VEDA.name();
-                LOGGER.error(msg);
-                throw new EntityNotFoundException(msg);
+
+                path = BASE_PATH + entity.getOwnerId() + "/" + Type.VEDA.name();
+                response = vaultTemplate.read(path, Credential.class);
+                if (response == null || response.getData() == null) {
+                    String msg = "Cannot find credentials for " + entity.getOwnerId() + " for type " + Type.VEDA.name();
+                    LOGGER.error(msg);
+                    throw new EntityNotFoundException(msg);
+                }
             }
 
             return CredentialMetadata.newBuilder()

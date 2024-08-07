@@ -23,8 +23,13 @@ import com.veda.central.core.model.credential.store.CredentialEntity;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.Optional;
+
 public interface CredentialRepository extends JpaRepository<CredentialEntity, Long> {
 
     @Transactional
     CredentialEntity findByClientId(String clientId);
+
+    @Transactional
+    Optional<CredentialEntity> findByOwnerIdAndClientId(long ownerId, String clientId);
 }
