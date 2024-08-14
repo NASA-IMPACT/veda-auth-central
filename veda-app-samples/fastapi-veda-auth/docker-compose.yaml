@@ -9,7 +9,6 @@ services:
     ports:
       - "8000:8000"
     environment:
-      - AUTH_PROVIDER_URL=https://api.veda.usecustos.org/api/v1/identity-management
-      - AUTH_PROVIDER_JWKS_URL=https://api.veda.usecustos.org/api/v1/identity-management/.well-known/jwks.json
+      - OIDC_CONFIG_URL=https://api.veda.usecustos.org/api/v1/identity-management/.well-known/openid-configuration?client_id=veda-iui65nmkgaf7bihdyndc-10000000
       - CLIENT_ID=veda-iui65nmkgaf7bihdyndc-10000000
     restart: unless-stopped

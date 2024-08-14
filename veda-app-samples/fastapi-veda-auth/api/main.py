@@ -1,4 +1,6 @@
-from typing import Annotated, Any, Dict, List, Optional
+import json
+import urllib.request
+from typing import Annotated, Any, Dict, List
 
 import jwt
 from fastapi import FastAPI, HTTPException, Security, security, status
@@ -9,28 +11,28 @@ from pydantic_settings import BaseSettings
 # Settings
 #
 class Settings(BaseSettings):
-    auth_provider_url: str
-    auth_provider_jwks_url: str
+    oidc_config_url: str
     client_id: str
     permitted_jwt_audiences: List[str] = ["account"]
 
 
+def build_jwks_client(oidc_config_url: str):
+    with urllib.request.urlopen(oidc_config_url) as response:
+        assert (
+            response.status == 200
+        ), f"Request for OIDC config failed with status {response.status}"
+        oidc_config = json.load(response)
+        return jwt.PyJWKClient(oidc_config["jwks_uri"])
+
+
 settings = Settings()
-jwks_client = jwt.PyJWKClient(settings.auth_provider_jwks_url)  # Caches JWKS
+jwks_client = build_jwks_client(settings.oidc_config_url)  # Caches JWKS
 
 
 #
 # Dependencies
 #
-oauth2_scheme = security.OAuth2AuthorizationCodeBearer(
-    authorizationUrl=f"{settings.auth_provider_url}/authorize",
-    tokenUrl=f"{settings.auth_provider_url}/token",
-    scopes={
-        f"example:{resource}:{action}": f"{action.title()} {resource}"
-        for resource in ["doc"]
-        for action in ["create", "read", "update", "delete"]
-    },
-)
+oauth2_scheme = security.OpenIdConnect(openIdConnectUrl=settings.oidc_config_url)
 
 
 def user_token(
@@ -75,6 +77,7 @@ app = FastAPI(
         "appName": "ExampleApp",
         "clientId": settings.client_id,
         "usePkceWithAuthorizationCodeGrant": True,
+        "scopes": "openid",
     },
 )
 
