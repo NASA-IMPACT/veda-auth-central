@@ -75,6 +75,7 @@ app = FastAPI(
         "appName": "ExampleApp",
         "clientId": settings.client_id,
         "usePkceWithAuthorizationCodeGrant": True,
+        "scopes": "openid",
     },
 )
 
