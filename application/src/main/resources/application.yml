@@ -14,7 +14,7 @@ veda-auth:
   keys:
     location: /Users/lahiruj/Projects/VEDA/veda-auth-central/application/src/main/resources/keys
   api:
-    domain: "https://apiveda.usecustos.org"
+    domain: "https://api.veda.usecustos.org"
 
 spring:
   application:
@@ -81,3 +81,9 @@ ciLogon:
       endpoint: https://test.cilogon.org/oauth2/oidc-cm
   institutions:
     endpoint: https://cilogon.org/idplist/
+
+springdoc:
+  swagger-ui:
+    title: VEDA Auth Central API
+    oauth:
+      use-pkce-with-authorization-code-grant: true

@@ -22,6 +22,11 @@ package com.veda.central.config;
 
 import io.swagger.v3.oas.models.OpenAPI;
 import io.swagger.v3.oas.models.info.Info;
+import io.swagger.v3.oas.models.security.OAuthFlow;
+import io.swagger.v3.oas.models.security.OAuthFlows;
+import io.swagger.v3.oas.models.security.Scopes;
+import io.swagger.v3.oas.models.security.SecurityRequirement;
+import io.swagger.v3.oas.models.security.SecurityScheme;
 import org.springdoc.core.models.GroupedOpenApi;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -42,6 +47,18 @@ public class OpenAPIConfig {
         return new OpenAPI()
                 .info(new Info()
                         .title("VEDA Auth Central API")
-                        .version("1.0.0"));
+                        .version("1.0.0"))
+                .addSecurityItem(new SecurityRequirement().addList("oauth2-pkce"))
+                .components(new io.swagger.v3.oas.models.Components()
+                        .addSecuritySchemes("oauth2-pkce",
+                                new SecurityScheme()
+                                        .type(SecurityScheme.Type.OAUTH2)
+                                        .flows(new OAuthFlows()
+                                                .authorizationCode(new OAuthFlow()
+                                                        .authorizationUrl("/api/v1/identity-management/authorize")
+                                                        .tokenUrl("/api/v1/identity-management/token")
+                                                        .scopes(new Scopes()
+                                                                .addString("openid", "openid")
+                                                                .addString("email", "email"))))));
     }
 }

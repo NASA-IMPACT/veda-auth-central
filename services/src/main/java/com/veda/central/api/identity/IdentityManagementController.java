@@ -424,29 +424,26 @@ public class IdentityManagementController {
         }*/
 
         boolean isPKCEFlow = params.containsKey("code_verifier");
-
-        if (!isPKCEFlow && !headers.containsKey("authorization")) {
+        if (!isPKCEFlow && !(headers.containsKey("authorization") || params.containsKey("client_secret"))) {
             return ResponseEntity.badRequest().body("No client id and secret or code_verifier is provided in the request");
         }
-
-        // TODO: check if client_id and secret is in the params map. If so, do not check below
 
         Credential credential;
         if (isPKCEFlow) {
             // If PKCE flow, only get the client ID
             credential = new Credential(params.get("client_id"), "");
         } else {
-            // This is fallback
-            if (!headers.containsKey("authorization") || Objects.requireNonNull(headers.get("authorization")).isEmpty()) {
-                return ResponseEntity.badRequest().body("No client id and secret is provided in the request");
+            if (headers.containsKey("authorization") && headers.getFirst("authorization") != null) {
+                String authorizationHeader = headers.get("authorization").get(0);
+                if (!authorizationHeader.startsWith("Basic")) {
+                    return ResponseEntity.badRequest().body("Expecting a basic auth type auth header");
+                }
+
+                credential = CredentialManager.decodeToken(authorizationHeader.substring("Basic ".length()));
+            } else {
+                credential = new Credential(params.get("client_id"), params.get("client_secret"));
             }
 
-            String authorizationHeader = headers.get("authorization").get(0);
-            if (!authorizationHeader.startsWith("Basic")) {
-                return ResponseEntity.badRequest().body("Expecting a basic auth type auth header");
-            }
-
-            credential = CredentialManager.decodeToken(authorizationHeader.substring("Basic ".length()));
             if (credential == null) {
                 return ResponseEntity.badRequest().body("Credentials were provided in incorrect format. Is should be 'Basic base64(client_id:client_secret)'");
             }
