@@ -27,9 +27,12 @@ import io.swagger.v3.oas.models.security.OAuthFlows;
 import io.swagger.v3.oas.models.security.Scopes;
 import io.swagger.v3.oas.models.security.SecurityRequirement;
 import io.swagger.v3.oas.models.security.SecurityScheme;
+import io.swagger.v3.oas.models.servers.Server;
 import org.springdoc.core.models.GroupedOpenApi;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+
+import java.util.List;
 
 @Configuration
 public class OpenAPIConfig {
@@ -59,6 +62,10 @@ public class OpenAPIConfig {
                                                         .tokenUrl("/api/v1/identity-management/token")
                                                         .scopes(new Scopes()
                                                                 .addString("openid", "openid")
-                                                                .addString("email", "email"))))));
+                                                                .addString("email", "email"))))))
+                .servers(List.of(
+                        new Server().url("http://127.0.0.1:8081"),
+                        new Server().url("https://api.veda.usecustos.org")
+                ));
     }
 }
