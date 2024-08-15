@@ -36,18 +36,29 @@ oauth2_scheme = security.OpenIdConnect(openIdConnectUrl=settings.oidc_config_url
 
 
 def user_token(
-    token_str: Annotated[str, Security(oauth2_scheme)],
+    auth_header: Annotated[str, Security(oauth2_scheme)],
     required_scopes: security.SecurityScopes,
 ):
+    # Retrieve token from header
+    [scheme, *params] = auth_header.split(" ")
+    if scheme.lower() != "bearer" or len(params) != 1:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Invalid token",
+            headers={"WWW-Authenticate": "Bearer"},
+        )
+    token = params[0]
+
     # Parse & validate token
     try:
-        token = jwt.decode(
-            token_str,
-            jwks_client.get_signing_key_from_jwt(token_str).key,
+        payload = jwt.decode(
+            token,
+            jwks_client.get_signing_key_from_jwt(token).key,
             algorithms=["RS256"],
             audience=settings.permitted_jwt_audiences,
         )
     except jwt.exceptions.InvalidTokenError as e:
+        print("Invalid token:", e)
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Could not validate credentials",
@@ -56,7 +67,7 @@ def user_token(
 
     # Validate scopes (if required)
     for scope in required_scopes.scopes:
-        if scope not in token["scope"]:
+        if scope not in payload["scope"]:
             raise HTTPException(
                 status_code=status.HTTP_401_UNAUTHORIZED,
                 detail="Not enough permissions",
@@ -65,7 +76,7 @@ def user_token(
                 },
             )
 
-    return token
+    return payload
 
 
 #
