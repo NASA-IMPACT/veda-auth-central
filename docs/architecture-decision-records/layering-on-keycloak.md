@@ -52,6 +52,7 @@ VEDA Auth Central deploys and manages out of the box open source Keycloack for V
      - Simple to implement with minimal development effort.
      - Utilizes Keycloak’s built-in features and administration tools.
      - Lower initial setup cost.
+     - Comes with an admin GUI.
    - **Cons:**
      - Lacks support for application-specific authorization, complex user onboarding, and automated group management.
      - Cannot support advanced use cases like scope inheritance or application-based user subscriptions.
@@ -75,6 +76,7 @@ VEDA Auth Central deploys and manages out of the box open source Keycloack for V
      - Additional effort required to develop and maintain the custom layer and its documentation.
      - Potential for increased complexity in managing the interaction between Keycloak and the custom layer.
      - Risk of requiring solution-specific logic on the application side.
+     - Requires development of a custom administation GUI.
 
 ## Decision Outcome
 
