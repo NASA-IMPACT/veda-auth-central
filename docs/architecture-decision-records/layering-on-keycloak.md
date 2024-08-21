@@ -39,11 +39,11 @@ VEDA Auth Central deploys and manages out of the box open source Keycloack for V
 
 ## Drivers
 - **Supports Complex Authorization Needs**: Support application-based user subscriptions, scope inheritance, and detailed access control for multiple environments (dev, staging, production).
-- **Simple Administration**: Administrators such as science program leads should be able to manage users or groups on their own
-- **Graphical User Interface**: Provide a graphical user interface for user and group administration
-- **Community friendly**: The solution should fit into VEDA as an ecosystem of community-maintained open source platform components, by being as little bespoke as possible
-- **Generic integration**: Integrating the auth flows into applications should be as generic as possible, such that applications can reuse logic for other publicly available providers like Auth0 FGA, Zanzibar
-- **Well documented**: Integrator and user docs need to be complete and of high quality to ensure good uptake by applications and other instances of the platform
+- **Simple Administration**: How easy it is for administrators such as science program leads to manage users or groups on their own
+- **Graphical User Interface**: Ease of providing a graphical user interface for user and group administration
+- **Community friendly**: How well the solution fits into VEDA as an ecosystem of community-maintained open source platform components
+- **Generic integration**: Whether the solution offers generic integration patterns, such that applications can reuse logic for other publicly available providers like Auth0
+- **Well documented**: Quality and completeness of documentation, important to ensure good uptake by applications and other instances of the platform
 
 ## Considered Options:
 
