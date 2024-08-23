@@ -41,7 +41,10 @@ import org.springframework.stereotype.Service;
 
 import java.security.KeyPair;
 import java.text.ParseException;
+import java.util.Arrays;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 @Service
 public class TokenService {
@@ -94,7 +97,7 @@ public class TokenService {
 
                 newClaims = new JWTClaimsSet.Builder(oldClaims)
                         .claim("groups", groupIds)
-                        .claim("scope", String.join(" ", existingScopes))
+                        .claim("scope", String.join(" ", scopes))
                         .claim("scopes", scopes)
                         .claim("iss", "https://" + tenantId + ".veda-auth-central.org")
                         .build();

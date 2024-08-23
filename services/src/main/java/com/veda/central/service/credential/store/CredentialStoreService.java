@@ -368,7 +368,7 @@ public class CredentialStoreService {
             }
 
             // TODO path should be considering the client too
-            String path = BASE_PATH + entity.getOwnerId() + "/" + Type.VEDA.name();
+            String path = BASE_PATH + entity.getOwnerId() + "/" + Type.VEDA.name() +  "/" + clientId;
 
             VaultResponseSupport<Credential> response = vaultTemplate.read(path, Credential.class);
 
