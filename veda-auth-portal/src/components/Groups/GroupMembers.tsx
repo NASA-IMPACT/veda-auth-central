@@ -11,9 +11,7 @@ import {
   Table,
   TableContainer,
   Tbody,
-  Td,
-  Tfoot,
-  Th,
+  Td, Th,
   Thead,
   Tr
 } from '@chakra-ui/react';
