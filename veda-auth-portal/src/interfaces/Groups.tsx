@@ -8,3 +8,13 @@ export interface GroupMembership {
   num_members?: number;
   your_role?: string;
 };
+
+export interface Member {
+  username: string;
+  email: string;
+  first_name: string;
+  last_name: string;
+  created_at: string;
+  last_modified_at: string;
+  membership_type: string;
+}

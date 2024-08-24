@@ -29,6 +29,7 @@ export const Groups = () => {
 
   if (!userGroups.isPending && userGroups.data) {
     const lowerSearch = search.toLowerCase();
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     filteredGroups = userGroups.data.groups.filter((group: any) => {
       return group.name.toLowerCase().includes(lowerSearch) 
         || group.description.toLowerCase().includes(lowerSearch)
@@ -91,7 +92,7 @@ export const Groups = () => {
                   <Tr key={group.id}>
                     <Td>
                       <Link
-                        to={`/groups/${group.id}`}
+                        to={`/groups/${group.id}/settings`}
                       >
                         <Text
                           color='blue.400'

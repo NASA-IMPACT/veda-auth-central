@@ -7,21 +7,15 @@ import {
   Input,
   SimpleGrid,
   Stack,
-  Divider,
-  Avatar,
-  Button,
+  Divider, Button,
   Table,
   Thead,
-  Tbody,
-  Tfoot,
-  Tr,
+  Tbody, Tr,
   Th,
-  Td,
-  TableCaption,
-  TableContainer,
+  Td, TableContainer,
   Code,
   IconButton,
-  Switch,
+  Switch
 } from '@chakra-ui/react';
 import { PageTitle } from '../PageTitle';
 import { FiTrash2 } from "react-icons/fi";
