@@ -44,6 +44,7 @@ const theConfig:AuthProviderProps= {
     jwks_uri: oidcConfig.jwks_uri,
   },
   userStore: new WebStorageStateStore({ store: window.localStorage }),
+  automaticSilentRenew: true,
 };
 
 const container = document.getElementById('root') as HTMLElement;

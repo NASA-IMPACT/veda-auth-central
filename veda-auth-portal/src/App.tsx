@@ -1,7 +1,6 @@
 import { Routes, Route, BrowserRouter } from 'react-router-dom';
 import { Heading } from '@chakra-ui/react';
 import { Groups } from './components/Groups';
-import './App.css';
 import { NavContainer } from './components/NavContainer';
 import { GroupDetails } from './components/Groups/GroupDetails';
 import { Login } from './components/Login';

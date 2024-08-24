@@ -24,11 +24,17 @@ export const Groups = () => {
   
   const auth = useAuth();
   const userInfo = decodeToken(auth.user?.access_token);
-  
-
   const userGroups = useApi(`${BACKEND_URL}/api/v1/group-management/users/${userInfo?.email}/group-memberships?client_id=${CLIENT_ID}`);
+  let filteredGroups = [];
 
-  console.log('userGroups', userGroups);
+  if (!userGroups.isPending && userGroups.data) {
+    const lowerSearch = search.toLowerCase();
+    filteredGroups = userGroups.data.groups.filter((group: any) => {
+      return group.name.toLowerCase().includes(lowerSearch) 
+        || group.description.toLowerCase().includes(lowerSearch)
+        || group.owner_id.toLowerCase().includes(lowerSearch);
+    })
+  }
 
   return (
     <NavContainer activeTab='groups'>
@@ -80,7 +86,7 @@ export const Groups = () => {
           <Tbody>
             {
               // eslint-disable-next-line @typescript-eslint/no-explicit-any
-              userGroups.data?.groups?.map((group: any) => {
+              filteredGroups.map((group: any) => {
                 return (
                   <Tr key={group.id}>
                     <Td>
