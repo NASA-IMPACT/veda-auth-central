@@ -77,25 +77,29 @@ export const GroupSettings = ({ groupId }: GroupSettingsProps) => {
   const auth = useAuth();
 
   const customFetch = async (url: string, options: RequestInit) => {
-    return fetch(url, {
+    const resp = fetch(url, {
       ...options,
       headers: {
         ...options.headers,
         'Authorization': `Bearer ${auth?.user?.access_token}`
       }
     });
+
+    const data = await resp.json();
+
+    return data;
   }
 
   useEffect(() => {
     (async () => {
-      const response = await customFetch(`${BACKEND_URL}/api/v1/group-management/groups/${groupId}`, {
+      const groupBasicInfo = await customFetch(`${BACKEND_URL}/api/v1/group-management/groups/${groupId}`, {
         method: 'GET'
       });
-      const data = await response.json();
-      console.log(data);
-      setName(data.name);
-      setDescription(data.description);
-      setOwner(data.owner_id);
+      
+      setName(groupBasicInfo.name);
+      setDescription(groupBasicInfo.description);
+      setOwner(groupBasicInfo.owner_id);
+
     })();
   }, [])
 
