@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { Link, useParams } from "react-router-dom";
+import { Link } from "react-router-dom";
 import { NavContainer } from "../NavContainer";
 import { PageTitle } from "../PageTitle";
 import { FaArrowLeft } from "react-icons/fa6";
@@ -41,7 +41,6 @@ const CustomTab = ({ children }: CustomTabProps) => {
 }
 
 export const GroupDetails = () => {
-  const { id } = useParams();
   const [basicInfo, setBasicInfo] = useState<GroupMembership | null>(null);
 
   useEffect(() => {
