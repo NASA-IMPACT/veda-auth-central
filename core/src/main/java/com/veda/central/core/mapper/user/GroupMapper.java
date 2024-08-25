@@ -108,6 +108,9 @@ public class GroupMapper {
         return groupEntity;
     }
 
+    public static com.veda.central.core.user.profile.api.Group createGroup(Group groupEntity, String ownerId, int numMembers) {
+        return createGroup(groupEntity, ownerId).toBuilder().setNumMembers(numMembers).build();
+    }
 
     public static com.veda.central.core.user.profile.api.Group createGroup(Group group, String ownerId) {
 
