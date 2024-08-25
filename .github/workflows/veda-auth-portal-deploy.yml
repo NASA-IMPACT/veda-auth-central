@@ -28,7 +28,7 @@ jobs:
             - name: Install Node.js
               uses: actions/setup-node@v2
               with:
-                  node-version: '14'
+                  node-version: '20'
             
             - name: Install dependencies
               run: npm install
@@ -44,6 +44,6 @@ jobs:
                 aws-region: "us-east-2"
 
             - name: Deploy app build to S3 bucket
-              run: ls
+              run: aws s3 sync ./dist/ s3://veda-auth-central-portal --delete
         
 
