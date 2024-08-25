@@ -1,5 +1,9 @@
 name: Deploy VEDA Auth Portal to AWS S3
 
+permissions:
+  id-token: write
+  contents: read
+
 on:
   workflow_dispatch:
     inputs:
