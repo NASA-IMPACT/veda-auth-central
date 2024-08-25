@@ -25,7 +25,7 @@ import { BACKEND_URL } from '../../lib/constants';
 import { useEffect } from 'react';
 import React from 'react';
 import { useAuth } from 'react-oidc-context';
-import { Member } from '../../interfaces/Groups';
+import { Group, Member } from '../../interfaces/Groups';
 
 const MOCK_GROUP_MANAGERS = [
   {
@@ -76,6 +76,7 @@ export const GroupSettings = ({ groupId }: GroupSettingsProps) => {
   const [description, setDescription] = React.useState('');
   const [owner, setOwner] = React.useState('');
   const [groupManagers, setGroupManagers] = React.useState([]);
+  const [roles, setRoles] = React.useState([]);
   const auth = useAuth();
 
   const customFetch = async (url: string, options?: RequestInit) => {
@@ -94,11 +95,12 @@ export const GroupSettings = ({ groupId }: GroupSettingsProps) => {
 
   useEffect(() => {
     (async () => {
-      const groupBasicInfo = await customFetch(`${BACKEND_URL}/api/v1/group-management/groups/${groupId}`);
+      const groupBasicInfo:Group = await customFetch(`${BACKEND_URL}/api/v1/group-management/groups/${groupId}`);
       console.log(groupBasicInfo);
       setName(groupBasicInfo.name);
       setDescription(groupBasicInfo.description);
       setOwner(groupBasicInfo.owner_id);
+      setRoles(groupBasicInfo.clientRoles);
 
       const groupMembers = await customFetch(`${BACKEND_URL}/api/v1/group-management/groups/${groupId}/members`);
       const groupManagers = groupMembers.profiles.filter((member: Member) => member.membership_type === 'ADMIN');
@@ -166,9 +168,14 @@ export const GroupSettings = ({ groupId }: GroupSettingsProps) => {
           right={(
             <>
               <Stack spacing={2}>
+                {
+                  groupManagers.length === 0 && (
+                    <Text>No group managers</Text>
+                  )
+                }
                 {groupManagers.map((manager: Member) => (
-                  <Flex key={index} align='center' justifyContent='space-between'>
-                    <Text ml={2}>{manager.id}</Text>
+                  <Flex key={manager.email} align='center' justifyContent='space-between'>
+                    <Text ml={2}>{manager.email}</Text>
                     <Button
                       border='1px solid'
                       borderColor="border.neutral.tertiary"
@@ -199,10 +206,10 @@ export const GroupSettings = ({ groupId }: GroupSettingsProps) => {
                   </Tr>
                 </Thead>
                 <Tbody>
-                  {MOCK_ROLES.map((role, index) => (
+                  {roles?.map((role, index) => (
                     <Tr key={index}>
                       <Td>
-                        <Code colorScheme='gray'>{role.name}</Code>
+                        <Code colorScheme='gray'>{role}</Code>
                       </Td>
                       <Td>{role.description}</Td>
 
