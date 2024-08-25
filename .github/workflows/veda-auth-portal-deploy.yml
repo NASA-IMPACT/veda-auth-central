@@ -11,7 +11,7 @@ jobs:
         runs-on: ubuntu-latest
         defaults:
             run:
-                working-directory: ./veda-auth-portal
+              working-directory: ./veda-auth-portal
         steps:
             - name: Install Node.js
               uses: actions/setup-node@v2
