@@ -20,6 +20,11 @@ import {
 import { PageTitle } from '../PageTitle';
 import { FiTrash2 } from "react-icons/fi";
 import { ActionButton } from '../ActionButton';
+import { useApi } from '../../hooks/useApi';
+import { BACKEND_URL } from '../../lib/constants';
+import { useEffect } from 'react';
+import React from 'react';
+import { useAuth } from 'react-oidc-context';
 
 const MOCK_GROUP_MANAGERS = [
   {
@@ -66,11 +71,36 @@ const LeftRightLayout = ({ left, right }: { left: React.ReactNode, right: React.
 }
 
 export const GroupSettings = ({ groupId }: GroupSettingsProps) => {
-  if (!groupId) {
-    return (
-      <Text>No group selected</Text>
-    )
+  const [name, setName] = React.useState('');
+  const [description, setDescription] = React.useState('');
+  const [owner, setOwner] = React.useState('');
+  const auth = useAuth();
+
+  const customFetch = async (url: string, options: RequestInit) => {
+    return fetch(url, {
+      ...options,
+      headers: {
+        ...options.headers,
+        'Authorization': `Bearer ${auth?.user?.access_token}`
+      }
+    });
   }
+
+  useEffect(() => {
+    (async () => {
+      const response = await customFetch(`${BACKEND_URL}/api/v1/group-management/groups/${groupId}`, {
+        method: 'GET'
+      });
+      const data = await response.json();
+      console.log(data);
+      setName(data.name);
+      setDescription(data.description);
+      setOwner(data.owner_id);
+    })();
+  }, [])
+
+
+
   return (
     <>
       <PageTitle size="md">Group Settings</PageTitle>
@@ -86,11 +116,20 @@ export const GroupSettings = ({ groupId }: GroupSettingsProps) => {
             <Stack spacing={4}>
               <FormControl color='default.default'>
                 <FormLabel>Name</FormLabel>
-                <Input type='text' />
+                <Input 
+                  type='text' 
+                  value={name}
+                  onChange={(e) => setName(e.target.value)}
+                  
+                />
               </FormControl>
               <FormControl>
                 <FormLabel>Description</FormLabel>
-                <Input type='text' />
+                <Input 
+                  type='text' 
+                  value={description}
+                  onChange={(e) => setDescription(e.target.value)}
+                />
               </FormControl>
             </Stack>
           )}
@@ -102,7 +141,9 @@ export const GroupSettings = ({ groupId }: GroupSettingsProps) => {
           )}
           right={(
             <Stack spacing={4}>
-              <Text ml={2}>Lisa Chou (You)</Text>
+              <Text ml={2}>
+                {owner}
+              </Text>
             </Stack>
           )}
         />

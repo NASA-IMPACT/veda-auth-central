@@ -12,6 +12,8 @@ import {
 } from "@chakra-ui/react";
 import { GroupSettings } from "./GroupSettings";
 import { GroupMembers } from "./GroupMembers";
+import { useApi } from "../../hooks/useApi";
+import { BACKEND_URL } from "../../lib/constants";
 
 interface CustomTabProps {
   children: React.ReactNode;
@@ -32,6 +34,7 @@ const CustomTab = ({ children }: CustomTabProps) => {
 export const GroupDetails = () => {
   const { id, path } = useParams();
   const defaultIndex = path === 'members' ? 1 : 0;
+  const basicGroupInfo = useApi(`${BACKEND_URL}/api/v1/group-management/groups/${id}`);
 
   return (
     <>
@@ -44,8 +47,8 @@ export const GroupDetails = () => {
         </Link>
 
         <Box mt={4}>
-          <PageTitle>{id}</PageTitle>
-          <Text color="default.secondary" mt={2}>text will go here</Text>
+          <PageTitle>{basicGroupInfo?.data?.name}</PageTitle>
+          <Text color="default.secondary" mt={2}>{basicGroupInfo?.data?.description}</Text>
         </Box>
 
         <Tabs 
