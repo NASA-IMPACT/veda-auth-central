@@ -5,7 +5,8 @@ import {
   Thead,
   Tbody, Tr,
   Th,
-  Td, TableContainer
+  Td, TableContainer,
+  useDisclosure
 } from '@chakra-ui/react'
 import { NavContainer } from '../NavContainer'
 import { PageTitle } from '../PageTitle'
@@ -17,10 +18,12 @@ import { useAuth } from 'react-oidc-context'
 import { BACKEND_URL, CLIENT_ID } from '../../lib/constants'
 import { useApi } from '../../hooks/useApi'
 import { decodeToken } from '../../lib/util'
+import { CreateGroupModal } from './CreateGroupModal'
 
 
 export const Groups = () => {
   const [search, setSearch] = useState('');
+  const createGroupModal = useDisclosure();
   
   const auth = useAuth();
   const userInfo = decodeToken(auth.user?.access_token);
@@ -31,9 +34,9 @@ export const Groups = () => {
     const lowerSearch = search.toLowerCase();
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     filteredGroups = userGroups.data.groups.filter((group: any) => {
-      return group.name.toLowerCase().includes(lowerSearch) 
-        || group.description.toLowerCase().includes(lowerSearch)
-        || group.owner_id.toLowerCase().includes(lowerSearch);
+      return group.name?.toLowerCase().includes(lowerSearch) 
+        || group.description?.toLowerCase().includes(lowerSearch)
+        || group.owner_id?.toLowerCase().includes(lowerSearch);
     })
   }
 
@@ -46,11 +49,15 @@ export const Groups = () => {
           <Text color='gray.500' mt={2}>View and manage all groups.</Text>
         </Box>
         <ActionButton icon={IoIosAdd} onClick={() => {
-          console.log('Create Group')
+          createGroupModal.onOpen();
         }}>
           Create Group
         </ActionButton>
       </Flex>
+
+      <CreateGroupModal 
+        auth={auth}
+      isOpen={createGroupModal.isOpen} onClose={createGroupModal.onClose} />
 
       {/* SEARCH BOX */}
       <InputGroup mt={4}>

@@ -57,41 +57,44 @@ export const NavContainer = ({ activeTab, children }: NavContainerProps) => {
   return (
     <>
       <Grid templateColumns='repeat(15, 1fr)'>
-        <GridItem colSpan={2}  bg='#F7F7F7'>
-          <Flex justifyContent='space-between' direction="column" h='100vh' p={4}>
-            <Box>
-              <Heading size='md'>
-                VEDA Auth Portal
-              </Heading>
+        <GridItem colSpan={3} bg='#F7F7F7'>
+          <Flex h='100vh' >
+            <Box position='fixed'>
+              <Flex justifyContent='space-between' direction="column" h='100vh' p={4} >
+              <Box>
+                <Heading size='md'>
+                  VEDA Auth Portal
+                </Heading>
 
-              <Stack direction='column'  mt={4}>
-                <NavItem to='/applications' icon={AiOutlineAppstore} text="Applications" activeTab={activeTab} />
-                <NavItem to='/groups' icon={FiUsers} text="Groups" activeTab={activeTab} />
-                <NavItem to='/users' icon={FiUser} text="Users" activeTab={activeTab} />
-              </Stack>
+                <Stack direction='column'  mt={4}>
+                  <NavItem to='/applications' icon={AiOutlineAppstore} text="Applications" activeTab={activeTab} />
+                  <NavItem to='/groups' icon={FiUsers} text="Groups" activeTab={activeTab} />
+                  <NavItem to='/users' icon={FiUser} text="Users" activeTab={activeTab} />
+                </Stack>
+              </Box>
+
+              <Button 
+                variant='unstyled' 
+                w='fit-content'
+                _hover={{
+                  color: 'gray.500'
+                }}
+                onClick={async () => {
+                  await auth.removeUser();
+                }}
+              >
+                <Flex alignItems='center' gap={2} w='fit-content'>
+                    <Icon as={MdLogout} />
+                    <Text as='span' >Logout</Text>
+                </Flex>
+
+              </Button>
+            </Flex>
             </Box>
-
-            <Button 
-              variant='unstyled' 
-              w='fit-content'
-              _hover={{
-                color: 'gray.500'
-              }}
-              onClick={async () => {
-                await auth.removeUser();
-              }}
-            >
-              <Flex alignItems='center' gap={2} w='fit-content'>
-                  <Icon as={MdLogout} />
-                  <Text as='span' >Logout</Text>
-              </Flex>
-
-            </Button>
-          
           </Flex>
 
         </GridItem>
-        <GridItem colSpan={13} p={16}>
+        <GridItem colSpan={12} p={16}>
           {children}
         </GridItem>
       </Grid>

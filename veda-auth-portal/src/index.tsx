@@ -3,7 +3,7 @@ import App from './App';
 import { extendTheme, ChakraProvider } from '@chakra-ui/react'
 import { AuthProvider, AuthProviderProps } from "react-oidc-context";
 import oidcConfig from './lib/oidcConfig.json'
-import { BACKEND_URL } from './lib/constants';
+import { BACKEND_URL, CLIENT_ID } from './lib/constants';
 import { WebStorageStateStore } from 'oidc-client-ts';
 
 // if (!oidcConfig) {
@@ -31,7 +31,7 @@ const theme = extendTheme({
 
 const theConfig:AuthProviderProps= {
   authority: `${BACKEND_URL}/api/v1/identity-management/`,
-  client_id: "veda-dafsxhsztbsczrmmbftw-10000000",
+  client_id: CLIENT_ID,
   redirect_uri: "http://localhost:5173/oauth-callback",
   response_type: "code",
   scope: "openid email",

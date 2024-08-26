@@ -15,44 +15,19 @@ import {
   Td, TableContainer,
   Code,
   IconButton,
-  Switch
+  Switch,
+  useToast
 } from '@chakra-ui/react';
 import { PageTitle } from '../PageTitle';
 import { FiTrash2 } from "react-icons/fi";
 import { ActionButton } from '../ActionButton';
-import { useApi } from '../../hooks/useApi';
 import { BACKEND_URL } from '../../lib/constants';
 import { useEffect } from 'react';
 import React from 'react';
 import { useAuth } from 'react-oidc-context';
 import { Group, Member } from '../../interfaces/Groups';
-
-const MOCK_GROUP_MANAGERS = [
-  {
-    email: "ganning.xu@gatech.edu",
-  },
-  {
-    email: "testemail@gmail.com"
-  },
-  {
-    email: "bob@gmail.com"
-  }
-]
-
-const MOCK_ROLES = [
-  {
-    name: "grafana:admin",
-    description: "View dashboard."
-  },
-  {
-    name: "stac:admin",
-    description: "Can view group settings and access group resources."
-  },
-  {
-    name: "grafana:editor",
-    description: "Can view group settings and access group resources."
-  }
-]
+import { useNavigate } from 'react-router-dom';
+import axios from 'axios';
 
 interface GroupSettingsProps {
   groupId: string | undefined;
@@ -76,8 +51,10 @@ export const GroupSettings = ({ groupId }: GroupSettingsProps) => {
   const [description, setDescription] = React.useState('');
   const [owner, setOwner] = React.useState('');
   const [groupManagers, setGroupManagers] = React.useState([]);
-  const [roles, setRoles] = React.useState([]);
+  const [roles, setRoles] = React.useState([] as string[] | undefined);
   const auth = useAuth();
+  const toast = useToast();
+  const navigate = useNavigate();
 
   const customFetch = async (url: string, options?: RequestInit) => {
     const resp = await fetch(url, {
@@ -100,7 +77,7 @@ export const GroupSettings = ({ groupId }: GroupSettingsProps) => {
       setName(groupBasicInfo.name);
       setDescription(groupBasicInfo.description);
       setOwner(groupBasicInfo.owner_id);
-      setRoles(groupBasicInfo.clientRoles);
+      setRoles(groupBasicInfo.client_roles);
 
       const groupMembers = await customFetch(`${BACKEND_URL}/api/v1/group-management/groups/${groupId}/members`);
       const groupManagers = groupMembers.profiles.filter((member: Member) => member.membership_type === 'ADMIN');
@@ -182,12 +159,42 @@ export const GroupSettings = ({ groupId }: GroupSettingsProps) => {
                       size='sm'
                       bg='white'
                       shadow='sm'
+                      onClick={async () => {
+                        const resp = await axios.delete(`${BACKEND_URL}/api/v1/group-management/groups/${groupId}/members/${manager.email}`, {
+                          headers: {
+                            Authorization: `Bearer ${auth.user?.access_token}`
+                          }
+                        });
+                    
+                        if (resp.status > 199 && resp.status < 300) {
+                          toast({
+                            title: 'Member removed',
+                            status: 'success',
+                            duration: 2000,
+                            isClosable: true
+                          })
+                        } else {
+                          toast({
+                            title: 'Error removing member',
+                            status: 'error',
+                            duration: 2000,
+                            isClosable: true
+                          })
+                        }
+
+                        navigate(0);
+                      }}
                     >Remove</Button>
                   </Flex>
                 ))}
               </Stack>
 
-              <Button variant='link' color='blue.400' size='sm' mt={4}>Add Manager</Button>
+              <Button variant='link' color='blue.400' size='sm' mt={4} 
+                onClick={() => {
+                  navigate(`/groups/${groupId}/members`);
+                  navigate(0);
+                }}
+              >Add Manager</Button>
             </>
           )}
           />
@@ -211,7 +218,7 @@ export const GroupSettings = ({ groupId }: GroupSettingsProps) => {
                       <Td>
                         <Code colorScheme='gray'>{role}</Code>
                       </Td>
-                      <Td>{role.description}</Td>
+                      {/* <Td>{role.description}</Td> */}
 
                       <Td>
                         <IconButton
@@ -226,7 +233,7 @@ export const GroupSettings = ({ groupId }: GroupSettingsProps) => {
                 </Tbody>
               </Table>
             </TableContainer>
-            <Button variant='link' color='blue.400' size='sm' mt={4}>Add Manager</Button>
+            <Button variant='link' color='blue.400' size='sm' mt={4}>Add Role</Button>
           </Box>
 
           <LeftRightLayout

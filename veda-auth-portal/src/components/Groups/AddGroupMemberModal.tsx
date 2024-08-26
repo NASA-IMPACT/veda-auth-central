@@ -102,7 +102,7 @@ import { useNavigate } from "react-router-dom";
                   >
                     <option value="MEMBER">Member</option>
                     <option value="OWNER">Owner</option>
-                    <option value="option3">Option 3</option>
+                    <option value="ADMIN">ADMIN</option>
                   </Select>
                 </FormControl>
   
