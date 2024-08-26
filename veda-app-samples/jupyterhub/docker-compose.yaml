@@ -6,8 +6,8 @@ services:
     ports:
       - "8000:8000"
     environment:
-      OAUTH_CLIENT_ID: "veda-n78pbpiu8msdjjxkvlmb-10000000"
-      OAUTH_CLIENT_SECRET: "6SqXY3OnaiBoIev9bG4sdX6mQRTiTmYd"
+      OAUTH_CLIENT_ID: "veda-xxxxx-10000000"
+      OAUTH_CLIENT_SECRET: "xxxxxx"
     volumes:
       - ./jupyterhub_config.py:/srv/jupyterhub/jupyterhub_config.py
       - /var/run/docker.sock:/var/run/docker.sock
