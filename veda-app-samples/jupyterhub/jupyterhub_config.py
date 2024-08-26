@@ -11,9 +11,11 @@ c.VedaOAuthenticator.oauth_callback_url = 'http://localhost:8000/hub/oauth_callb
 c.VedaOAuthenticator.authorize_url = 'https://api.veda.usecustos.org/api/v1/identity-management/authorize'
 c.VedaOAuthenticator.token_url = 'https://api.veda.usecustos.org/api/v1/identity-management/token'
 c.VedaOAuthenticator.userdata_url = 'https://api.veda.usecustos.org/api/v1/user-management/userinfo'
-c.VedaOAuthenticator.userdata_method = 'GET'
+c.VedaOAuthenticator.userdata_token_method = 'GET'
 c.VedaOAuthenticator.userdata_params = {"scope": "openid profile email"}
-c.VedaOAuthenticator.username_key = 'email'
+c.VedaOAuthenticator.username_claim = 'email'
+c.Authenticator.enable_auth_state = True
+c.VedaOAuthenticator.allow_all= True
 
 # Set the required OAuth2 scopes
 c.VedaOAuthenticator.scope = ['openid', 'profile', 'email']

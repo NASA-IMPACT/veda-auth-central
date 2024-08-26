@@ -25,6 +25,7 @@ class VedaOAuthenticator(OAuthenticator):
     token_url = Unicode(config=True)
     oauth_callback_url = Unicode(config=True)
     scope = List(Unicode(), default_value=['openid', 'email', 'org.cilogon.userinfo'], config=True)
+    allowed_groups = List(Unicode(), default_value=['VedaHubAdmin', 'VedaHubEditor'], config=True)
 
     @default("authorize_url")
     def _authorize_url_default(self):
@@ -85,6 +86,12 @@ class VedaOAuthenticator(OAuthenticator):
         except jwt.PyJWTError as e:
             app_log.error("Failed to decode JWT token: %s", str(e))
             raise HTTPError(500, "Invalid token")
+
+        # Check user groups against allowed groups
+        user_groups = payload.get('groups', [])
+        if not any(group in self.allowed_groups for group in user_groups):
+            app_log.error("User %s is not in an allowed group", payload.get('preferred_username'))
+            raise HTTPError(403, f"User is not authorized to use this hub.")
 
         userdict = {
             "name": payload.get('preferred_username'),
