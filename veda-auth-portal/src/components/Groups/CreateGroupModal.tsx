@@ -52,7 +52,7 @@ export const CreateGroupModal = ({isOpen, onClose, auth }: {
       headers: {
         Authorization: `Bearer ${auth.user.access_token}`
       }
-    }).then((res) => {
+    }).then(() => {
       onClose();
       navigate(0);
     }).catch((err) => {
