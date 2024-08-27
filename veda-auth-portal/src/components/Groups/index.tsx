@@ -40,7 +40,6 @@ export const Groups = () => {
     })
   }
 
-  console.log('filteredGroups', filteredGroups);  
   return (
     <NavContainer activeTab='groups'>
       {/* TOP HEADER PORTION */}
