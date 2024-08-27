@@ -1,0 +1,49 @@
+name: Deploy VEDA Auth Portal to AWS S3
+
+permissions:
+  id-token: write
+  contents: read
+
+on:
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: Environment to deploy to
+        required: true
+        type: choice
+        options:
+          - dev
+          - prod
+
+jobs:
+    build:
+        runs-on: ubuntu-latest
+        defaults:
+            run:
+              working-directory: ./veda-auth-portal
+        steps:
+            - name: Checkout code
+              uses: actions/checkout@v4
+              
+            - name: Install Node.js
+              uses: actions/setup-node@v2
+              with:
+                  node-version: '20'
+            
+            - name: Install dependencies
+              run: npm install
+            
+            - name: Build
+              run: npm run build
+
+            - name: Configure AWS Credentials
+              uses: aws-actions/configure-aws-credentials@v4
+              with:
+                role-to-assume: ${{ secrets.DEPLOYMENT_ROLE_ARN }}
+                role-session-name: "github-veda-auth-central-${{ github.run_id }}"
+                aws-region: "us-east-2"
+
+            - name: Deploy app build to S3 bucket
+              run: aws s3 sync ./dist/ s3://veda.usecustos.org --delete
+        
+
