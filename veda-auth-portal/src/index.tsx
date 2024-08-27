@@ -2,15 +2,10 @@ import { createRoot } from 'react-dom/client';
 import App from './App';
 import { extendTheme, ChakraProvider } from '@chakra-ui/react'
 import { AuthProvider, AuthProviderProps } from "react-oidc-context";
-import oidcConfig from './lib/oidcConfig.json'
+import localOidcConfig from './lib/localOidcConfig.json';
+import prodOidcConfig from './lib/prodOidcConfig.json';
 import { BACKEND_URL, CLIENT_ID } from './lib/constants';
 import { WebStorageStateStore } from 'oidc-client-ts';
-
-// if (!oidcConfig) {
-//   console.error('OIDC configuration not found');
-// } else {
-//   console.log('OIDC configuration found', oidcConfig);
-// }
 
 const theme = extendTheme({
   colors: {
@@ -29,23 +24,36 @@ const theme = extendTheme({
   },
 });
 
-const theConfig:AuthProviderProps= {
+let theOidcConfig;
+let redirect_uri:string;
+
+if (!process.env.NODE_ENV || process.env.NODE_ENV === 'development') {
+  theOidcConfig = localOidcConfig;
+  redirect_uri = 'http://localhost:5173/oauth-callback';
+} else {
+  // production code
+  theOidcConfig = prodOidcConfig;
+  redirect_uri = 'https://veda.usecustos.org/oauth-callback';
+}
+
+const theConfig:AuthProviderProps = {
   authority: `${BACKEND_URL}/api/v1/identity-management/`,
   client_id: CLIENT_ID,
-  redirect_uri: "http://localhost:5173/oauth-callback",
+  redirect_uri: redirect_uri,
   response_type: "code",
   scope: "openid email",
   metadata: {
-    authorization_endpoint: oidcConfig.authorization_endpoint,
-    token_endpoint: oidcConfig.token_endpoint,
-    revocation_endpoint: oidcConfig.revocation_endpoint,
-    introspection_endpoint: oidcConfig.introspection_endpoint,
-    userinfo_endpoint: oidcConfig.userinfo_endpoint,
-    jwks_uri: oidcConfig.jwks_uri,
+    authorization_endpoint: theOidcConfig.authorization_endpoint,
+    token_endpoint: theOidcConfig.token_endpoint,
+    revocation_endpoint: theOidcConfig.revocation_endpoint,
+    introspection_endpoint: theOidcConfig.introspection_endpoint,
+    userinfo_endpoint: theOidcConfig.userinfo_endpoint,
+    jwks_uri: theOidcConfig.jwks_uri,
   },
   userStore: new WebStorageStateStore({ store: window.localStorage }),
   automaticSilentRenew: true,
 };
+
 
 const container = document.getElementById('root') as HTMLElement;
 const root = createRoot(container);
