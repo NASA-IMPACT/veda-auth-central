@@ -44,6 +44,6 @@ jobs:
                 aws-region: "us-east-2"
 
             - name: Deploy app build to S3 bucket
-              run: aws s3 sync ./dist/ s3://portal.veda.usecustos.org --delete
+              run: aws s3 sync ./dist/ s3://veda.usecustos.org --delete
         
 
