@@ -1,7 +1,6 @@
 import { Routes, Route, BrowserRouter } from 'react-router-dom';
 import { Heading } from '@chakra-ui/react';
 import { Groups } from './components/Groups';
-import './App.css';
 import { NavContainer } from './components/NavContainer';
 import { GroupDetails } from './components/Groups/GroupDetails';
 import { Login } from './components/Login';
@@ -25,7 +24,7 @@ export default function App() {
         <Route path="/" element={<Login />} />
           <Route path="/applications" element={<ProtectedComponent Component={NotImplemented}  />} />
           <Route path="/users" element={<ProtectedComponent Component={NotImplemented}  />} />
-          <Route path="/groups/:id" element={<ProtectedComponent Component={GroupDetails}  />} />
+          <Route path="/groups/:id/:path" element={<ProtectedComponent Component={GroupDetails}  />} />
           <Route path="/groups" element={<ProtectedComponent Component={Groups}  />} />
       </Routes>
     </BrowserRouter>

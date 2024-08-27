@@ -15,38 +15,19 @@ import {
   Td, TableContainer,
   Code,
   IconButton,
-  Switch
+  Switch,
+  useToast
 } from '@chakra-ui/react';
 import { PageTitle } from '../PageTitle';
 import { FiTrash2 } from "react-icons/fi";
 import { ActionButton } from '../ActionButton';
-
-const MOCK_GROUP_MANAGERS = [
-  {
-    email: "ganning.xu@gatech.edu",
-  },
-  {
-    email: "testemail@gmail.com"
-  },
-  {
-    email: "bob@gmail.com"
-  }
-]
-
-const MOCK_ROLES = [
-  {
-    name: "grafana:admin",
-    description: "View dashboard."
-  },
-  {
-    name: "stac:admin",
-    description: "Can view group settings and access group resources."
-  },
-  {
-    name: "grafana:editor",
-    description: "Can view group settings and access group resources."
-  }
-]
+import { BACKEND_URL } from '../../lib/constants';
+import { useEffect } from 'react';
+import React from 'react';
+import { useAuth } from 'react-oidc-context';
+import { Group, Member } from '../../interfaces/Groups';
+import { useNavigate } from 'react-router-dom';
+import axios from 'axios';
 
 interface GroupSettingsProps {
   groupId: string | undefined;
@@ -66,11 +47,47 @@ const LeftRightLayout = ({ left, right }: { left: React.ReactNode, right: React.
 }
 
 export const GroupSettings = ({ groupId }: GroupSettingsProps) => {
-  if (!groupId) {
-    return (
-      <Text>No group selected</Text>
-    )
+  const [name, setName] = React.useState('');
+  const [description, setDescription] = React.useState('');
+  const [owner, setOwner] = React.useState('');
+  const [groupManagers, setGroupManagers] = React.useState([]);
+  const [roles, setRoles] = React.useState([] as string[] | undefined);
+  const auth = useAuth();
+  const toast = useToast();
+  const navigate = useNavigate();
+
+  const customFetch = async (url: string, options?: RequestInit) => {
+    const resp = await fetch(url, {
+      ...options,
+      headers: {
+        ...options?.headers,
+        'Authorization': `Bearer ${auth?.user?.access_token}`
+      }
+    });
+
+    const data = await resp.json();
+
+    return data;
   }
+
+  useEffect(() => {
+    (async () => {
+      const groupBasicInfo:Group = await customFetch(`${BACKEND_URL}/api/v1/group-management/groups/${groupId}`);
+      console.log(groupBasicInfo);
+      setName(groupBasicInfo.name);
+      setDescription(groupBasicInfo.description);
+      setOwner(groupBasicInfo.owner_id);
+      setRoles(groupBasicInfo.client_roles);
+
+      const groupMembers = await customFetch(`${BACKEND_URL}/api/v1/group-management/groups/${groupId}/members`);
+      const groupManagers = groupMembers.profiles.filter((member: Member) => member.membership_type === 'ADMIN');
+      setGroupManagers(groupManagers);
+
+    })();
+  }, [])
+
+
+
   return (
     <>
       <PageTitle size="md">Group Settings</PageTitle>
@@ -86,11 +103,20 @@ export const GroupSettings = ({ groupId }: GroupSettingsProps) => {
             <Stack spacing={4}>
               <FormControl color='default.default'>
                 <FormLabel>Name</FormLabel>
-                <Input type='text' />
+                <Input 
+                  type='text' 
+                  value={name}
+                  onChange={(e) => setName(e.target.value)}
+                  
+                />
               </FormControl>
               <FormControl>
                 <FormLabel>Description</FormLabel>
-                <Input type='text' />
+                <Input 
+                  type='text' 
+                  value={description}
+                  onChange={(e) => setDescription(e.target.value)}
+                />
               </FormControl>
             </Stack>
           )}
@@ -102,7 +128,9 @@ export const GroupSettings = ({ groupId }: GroupSettingsProps) => {
           )}
           right={(
             <Stack spacing={4}>
-              <Text ml={2}>Lisa Chou (You)</Text>
+              <Text ml={2}>
+                {owner}
+              </Text>
             </Stack>
           )}
         />
@@ -117,8 +145,13 @@ export const GroupSettings = ({ groupId }: GroupSettingsProps) => {
           right={(
             <>
               <Stack spacing={2}>
-                {MOCK_GROUP_MANAGERS.map((manager, index) => (
-                  <Flex key={index} align='center' justifyContent='space-between'>
+                {
+                  groupManagers.length === 0 && (
+                    <Text>No group managers</Text>
+                  )
+                }
+                {groupManagers.map((manager: Member) => (
+                  <Flex key={manager.email} align='center' justifyContent='space-between'>
                     <Text ml={2}>{manager.email}</Text>
                     <Button
                       border='1px solid'
@@ -126,12 +159,42 @@ export const GroupSettings = ({ groupId }: GroupSettingsProps) => {
                       size='sm'
                       bg='white'
                       shadow='sm'
+                      onClick={async () => {
+                        const resp = await axios.delete(`${BACKEND_URL}/api/v1/group-management/groups/${groupId}/members/${manager.email}`, {
+                          headers: {
+                            Authorization: `Bearer ${auth.user?.access_token}`
+                          }
+                        });
+                    
+                        if (resp.status > 199 && resp.status < 300) {
+                          toast({
+                            title: 'Member removed',
+                            status: 'success',
+                            duration: 2000,
+                            isClosable: true
+                          })
+                        } else {
+                          toast({
+                            title: 'Error removing member',
+                            status: 'error',
+                            duration: 2000,
+                            isClosable: true
+                          })
+                        }
+
+                        navigate(0);
+                      }}
                     >Remove</Button>
                   </Flex>
                 ))}
               </Stack>
 
-              <Button variant='link' color='blue.400' size='sm' mt={4}>Add Manager</Button>
+              <Button variant='link' color='blue.400' size='sm' mt={4} 
+                onClick={() => {
+                  navigate(`/groups/${groupId}/members`);
+                  navigate(0);
+                }}
+              >Add Manager</Button>
             </>
           )}
           />
@@ -150,12 +213,12 @@ export const GroupSettings = ({ groupId }: GroupSettingsProps) => {
                   </Tr>
                 </Thead>
                 <Tbody>
-                  {MOCK_ROLES.map((role, index) => (
+                  {roles?.map((role, index) => (
                     <Tr key={index}>
                       <Td>
-                        <Code colorScheme='gray'>{role.name}</Code>
+                        <Code colorScheme='gray'>{role}</Code>
                       </Td>
-                      <Td>{role.description}</Td>
+                      {/* <Td>{role.description}</Td> */}
 
                       <Td>
                         <IconButton
@@ -170,7 +233,7 @@ export const GroupSettings = ({ groupId }: GroupSettingsProps) => {
                 </Tbody>
               </Table>
             </TableContainer>
-            <Button variant='link' color='blue.400' size='sm' mt={4}>Add Manager</Button>
+            <Button variant='link' color='blue.400' size='sm' mt={4}>Add Role</Button>
           </Box>
 
           <LeftRightLayout
