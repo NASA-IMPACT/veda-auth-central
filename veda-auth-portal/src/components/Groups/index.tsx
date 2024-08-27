@@ -33,13 +33,14 @@ export const Groups = () => {
   if (!userGroups.isPending && userGroups.data) {
     const lowerSearch = search.toLowerCase();
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    filteredGroups = userGroups.data.groups.filter((group: any) => {
+    filteredGroups = userGroups?.data?.groups?.filter((group: any) => {
       return group.name?.toLowerCase().includes(lowerSearch) 
         || group.description?.toLowerCase().includes(lowerSearch)
         || group.owner_id?.toLowerCase().includes(lowerSearch);
     })
   }
 
+  console.log('filteredGroups', filteredGroups);  
   return (
     <NavContainer activeTab='groups'>
       {/* TOP HEADER PORTION */}
@@ -94,7 +95,7 @@ export const Groups = () => {
           <Tbody>
             {
               // eslint-disable-next-line @typescript-eslint/no-explicit-any
-              filteredGroups.map((group: any) => {
+              filteredGroups?.map((group: any) => {
                 return (
                   <Tr key={group.id}>
                     <Td>
@@ -121,10 +122,19 @@ export const Groups = () => {
               })
             }
           </Tbody>
+          {
+            ((!filteredGroups) || (!filteredGroups.data) || (filteredGroups.data?.groups?.length === 0)) && (
+              <Tbody>
+                <Tr>
+                  <Td colSpan={5} textAlign='center'>
+                    No groups found
+                  </Td>
+                </Tr>
+              </Tbody>
+            )
+          }
         </Table>
       </TableContainer>
-
-
     </NavContainer>
   )
 }
