@@ -45,5 +45,7 @@ jobs:
 
             - name: Deploy app build to S3 bucket
               run: aws s3 sync ./dist/ s3://veda.usecustos.org --delete
-        
+
+            - name: Invalidate CloudFront cache
+              run: aws cloudfront create-invalidation --distribution-id ${{ secrets.CLOUDFRONT_DISTRIBUTION_ID }} --paths "/*"
 
