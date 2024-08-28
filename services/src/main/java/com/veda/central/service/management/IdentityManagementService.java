@@ -307,21 +307,7 @@ public class IdentityManagementService {
     public OIDCConfiguration getOIDCConfiguration(GetOIDCConfiguration request) {
         try {
             LOGGER.debug("Request received  to fetch OIDC configuration " + request.getTenantId());
-
-            String clientId = request.getClientId();
-            GetCredentialRequest req = GetCredentialRequest.newBuilder().setId(clientId).build();
-            CredentialMetadata metadata = credentialStoreService.getVedaCredentialFromClientId(req);
-
-            GetCredentialRequest iamCredentialRequest = GetCredentialRequest.newBuilder()
-                    .setType(Type.IAM)
-                    .setOwnerId(metadata.getOwnerId())
-                    .setId(request.getClientId()).build();
-
-            CredentialMetadata iamCredential = credentialStoreService.getCredential(iamCredentialRequest);
-            request = request.toBuilder().setTenantId(metadata.getOwnerId()).setClientId(iamCredential.getId()).build();
-
             return identityService.getOIDCConfiguration(request);
-
         } catch (Exception ex) {
             String msg = "Exception occurred while retrieving OIDC configuration " + ex.getMessage();
             LOGGER.error(msg);
