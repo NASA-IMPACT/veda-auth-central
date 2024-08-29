@@ -73,22 +73,30 @@ export const NavContainer = ({ activeTab, children }: NavContainerProps) => {
                 </Stack>
               </Box>
 
-              <Button 
-                variant='unstyled' 
-                w='fit-content'
-                _hover={{
-                  color: 'gray.500'
-                }}
-                onClick={async () => {
-                  await auth.removeUser();
-                }}
-              >
-                <Flex alignItems='center' gap={2} w='fit-content'>
-                    <Icon as={MdLogout} />
-                    <Text as='span' >Logout</Text>
-                </Flex>
-
-              </Button>
+              <Box>
+                <Text fontWeight='bold'>
+                  {auth.user?.profile?.name}
+                </Text>
+                <Text fontSize='sm' color='gray.500'>
+                  {auth.user?.profile?.email}
+                </Text>
+                <Button 
+                  variant='unstyled' 
+                  w='fit-content'
+                  size='sm'
+                  _hover={{
+                    color: 'gray.500'
+                  }}
+                  onClick={async () => {
+                    await auth.removeUser();
+                  }}
+                >
+                  <Flex alignItems='center' gap={2} w='fit-content'>
+                      <Icon as={MdLogout} />
+                      <Text as='span' >Logout</Text>
+                  </Flex>
+                </Button>
+              </Box>
             </Flex>
             </Box>
           </Flex>
