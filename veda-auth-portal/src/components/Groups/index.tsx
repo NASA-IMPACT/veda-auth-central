@@ -122,7 +122,7 @@ export const Groups = () => {
             }
           </Tbody>
           {
-            ((!filteredGroups) || (!filteredGroups.data) || (filteredGroups.data?.groups?.length === 0)) && (
+            ((!filteredGroups) || (filteredGroups.length === 0)) && (
               <Tbody>
                 <Tr>
                   <Td colSpan={5} textAlign='center'>
