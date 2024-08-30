@@ -4,9 +4,10 @@ interface ActionButtonProps {
   children: React.ReactNode;
   icon?: any;
   size?: string;
+  isDisabled?: boolean;
 }
 
-export const ActionButton = ({ onClick, icon, children, size }: ActionButtonProps) => {
+export const ActionButton = ({ onClick, icon, children, size, isDisabled }: ActionButtonProps) => {
   return (
     <Button
       bg='black'
@@ -19,6 +20,7 @@ export const ActionButton = ({ onClick, icon, children, size }: ActionButtonProp
       py={1}
       fontSize='sm'
       size={size}
+      isDisabled={isDisabled}
     >
       {icon && <Icon as={icon} mr={1} fontSize='lg' />}
       {children}
