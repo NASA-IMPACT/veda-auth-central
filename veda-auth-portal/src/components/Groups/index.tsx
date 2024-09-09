@@ -113,9 +113,9 @@ export const Groups = () => {
                       </Link>
                     </Td>
                     <Td>{group.owner_id}</Td>
-                    <Td>{group.your_role}</Td>
+                    <Td>{group.requester_role}</Td>
                     <Td>{group.description}</Td>
-                    <Td>{group.num_members}</Td>
+                    <Td>{group.total_members}</Td>
                   </Tr>
                 )
               })
