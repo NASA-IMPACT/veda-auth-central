@@ -5,15 +5,18 @@ interface ActionButtonProps {
   icon?: any;
   size?: string;
   isDisabled?: boolean;
+  colorScheme?: string;
 }
 
-export const ActionButton = ({ onClick, icon, children, size, isDisabled }: ActionButtonProps) => {
+export const ActionButton = ({ onClick, icon, children, size, isDisabled, colorScheme }: ActionButtonProps) => {
   return (
     <Button
-      bg='black'
+      bg={
+        !colorScheme ? "black" : undefined
+      }
       color='white'
       _hover={{
-        bg: 'gray.600'
+        bg: !colorScheme ? "black" : undefined
       }}
       onClick={onClick}
       px={2}
@@ -21,6 +24,7 @@ export const ActionButton = ({ onClick, icon, children, size, isDisabled }: Acti
       fontSize='sm'
       size={size}
       isDisabled={isDisabled}
+      colorScheme={colorScheme}
     >
       {icon && <Icon as={icon} mr={1} fontSize='lg' />}
       {children}
