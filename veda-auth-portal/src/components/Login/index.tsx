@@ -10,8 +10,19 @@ export const Login = () => {
   return (
     <>
       <Center height='100vh'>
-        <SimpleGrid columns={2} spacing={32} alignItems='center'>
-          <Img src={cuate} alt="cuate" maxW='400px' />
+        <SimpleGrid columns={{
+          base: 1,
+          lg: 2
+        }} spacing={32} alignItems='center'>
+          <Img 
+            src={cuate} 
+            alt="cuate" 
+            maxW='400px' 
+            display={{
+              base: 'none',
+              lg: 'block'
+            }}
+          />
 
           <Box>
             <Flex gap={4} alignItems='center'>
