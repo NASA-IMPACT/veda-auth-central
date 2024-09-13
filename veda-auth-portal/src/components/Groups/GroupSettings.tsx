@@ -112,9 +112,45 @@ export const GroupSettings = ({ groupId }: GroupSettingsProps) => {
     })();
   }, []);
 
+  const handleSaveChanges = async() => {
+    console.log(name, description);
+
+    const resp = await customFetch(
+      `${BACKEND_URL}/api/v1/group-management/groups/${groupId}`,
+      {
+        method: "PUT",
+        body: JSON.stringify({
+          name,
+          description
+        }),
+        headers: {
+          "Content-Type": "application/json"
+        }
+      }
+    );
+
+    console.log(resp);
+
+    if (resp?.id) {
+      // was successful
+      navigate(0);
+    } else {
+      toast({
+        title: 'Could not save group',
+        status: 'error',
+        duration: 3000,
+        isClosable: true,
+      });
+    }
+
+
+  }
+
   if (!groupId) {
     return;
   }
+
+
 
   return (
     <>
@@ -297,7 +333,7 @@ export const GroupSettings = ({ groupId }: GroupSettingsProps) => {
       </Stack>
 
       <Stack direction="row" mt={8} spacing={4}>
-        <ActionButton onClick={() => {}}>Save Changes</ActionButton>
+        <ActionButton onClick={handleSaveChanges}>Save Changes</ActionButton>
 
         <ActionButton
           onClick={transferOwnershipDisclosure.onOpen}
