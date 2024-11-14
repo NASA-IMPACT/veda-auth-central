@@ -18,11 +18,11 @@ Once completed, this will help us make a systematic informed choice on what tech
 
 Since there are many moving pieces, it is important to define some common terms that will be used through this document. We will reuse terms from [OpenID Connect](https://openid.net/specs/openid-connect-core-1_0.html#Terminology) where possible.
 
-**Relying Party (RP)**: The service that end users are trying to log in to (JupyterHub, STAC, etc).
-**Relying Party Maintainers**: The group of people responsible for building, maintaining and configuring the relying party (JupyterHub VEDA team, STAC team, etc)
-**Authentication Service Maintainers**: The group of people responsible for maintaining the *authentication service chosen* itself.
-**End Users**: People who log in to access the different Relying Party services (JupyterHub, STAC, etc)
-**Administrative Users**: A subset of end users who have administrative power over other end users. In particular, they have group management power.
+- **Relying Party (RP)**: The service that end users are trying to log in to (JupyterHub, STAC, etc).
+- **Relying Party Maintainers**: The group of people responsible for building, maintaining and configuring the relying party (JupyterHub VEDA team, STAC team, etc)
+- **Authentication Service Maintainers**: The group of people responsible for maintaining the *authentication service chosen* itself.
+- **End Users**: People who log in to access the different Relying Party services (JupyterHub, STAC, etc)
+- **Administrative Users**: A subset of end users who have administrative power over other end users. In particular, they have group management power.
 
 ## Workflow 1: Configuring the upstream authentication *provider*
 
