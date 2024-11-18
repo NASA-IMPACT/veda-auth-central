@@ -88,7 +88,7 @@ Ideally, this would be done by Relying Party Maintainers following some document
 
 #### Description
 
-We want to be able to bucket users into various groups *manually*, via a UI. This UI should be available to a small subset of users.
+We want to be able to bucket users into various groups *manually*, via a UI. This UI should be available to a small subset of users. Automatic group assignment is explicitly out of scope for now.
 
 #### Frequency of use
 
