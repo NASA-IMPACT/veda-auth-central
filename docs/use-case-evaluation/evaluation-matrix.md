@@ -30,13 +30,13 @@ To evaluate these workflows, each cell in the below shall be given
 | Workflow | (E1) Existing upstream features | (E2) Building ourselves? | (E3) Ongoing Maintenance Effort | (E4) User Experience | (E5) Ease of future change | 
 | - | - | - | - | - | - |
 | W1 KeyCloak |  |  |  |  |  |
-| W1 KeyCloak + Custos |  |  |  |  |  |
+| W1 Custos |  |  |  |  |  |
 | W2 KeyCloak | 
-| W2 KeyCloak + Custos | 
+| W2 Custos | 
 | W3 KeyCloak | 
-| W3 KeyCloak + Custos | 
+| W3 Custos | 
 | 4 KeyCloak | 
-| 4 KeyCloak + Custos | 
+| 4 Custos | 
 | 5 KeyCloak |
-| 5 KeyCloak + Custos |
+| 5 Custos |
 
