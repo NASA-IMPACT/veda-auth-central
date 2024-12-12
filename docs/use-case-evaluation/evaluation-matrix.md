@@ -38,7 +38,7 @@ To evaluate these workflows, each cell in the below shall be given
 | W2 KeyCloak |  |  |  |  |  |  |
 | W2 Custos |  |  |  |  |  |  |
 | [W3](https://docs.google.com/document/d/1Jbqj89mzKYCDRxNI5VQ1WYLWQVq_93hGW6XaSm11cGs/edit?tab=t.0#heading=h.was12i5zxbgb) KeyCloak | Yes (KeyCloak feature in preview) | No (KeyCloak builtin) | None | 0 | 4 (using KeyCloak UI) | 5 (easy e.g. to expand list of permissions) |
-| [W3](https://docs.google.com/document/d/14UXEQWEouGRIUbI4epmbGSH2svYWbTKxjxNf3TR_ohw/edit?tab=t.0#heading=h.was12i5zxbgb) Custos |  |  |  |  |  |  |
+| W3 Custos |  |  |  |  |  |  |
 | W4 KeyCloak |  |  |  |  |  |  |
 | W4 Custos |  |  |  |  |  |  |
 
