@@ -27,16 +27,13 @@ To evaluate these workflows, each cell in the below shall be given
 
 ## Matrix
 
-| Workflow | (E1) Existing upstream features | (E2) Building ourselves? | (E3) Ongoing Maintenance Effort | (E4) User Experience | (E5) Ease of future change | 
+| [Workflow](https://github.com/NASA-IMPACT/veda-auth-central/blob/main/docs/use-case-evaluation/workflows.md) | (E1) Existing upstream features | (E2) Building ourselves? | (E3) Ongoing Maintenance Effort | (E4) User Experience | (E5) Ease of future change | 
 | - | - | - | - | - | - |
-| W1 KeyCloak |  |  |  |  |  |
-| W1 Custos |  |  |  |  |  |
-| W2 KeyCloak | 
-| W2 Custos | 
-| W3 KeyCloak | 
-| W3 Custos | 
-| W4 KeyCloak | 
-| W4 Custos | 
-| W5 KeyCloak |
-| W5 Custos |
-
+| [W1](https://github.com/NASA-IMPACT/veda-auth-central/blob/main/docs/use-case-evaluation/workflows.md#workflow-1-configuring-the-upstream-authentication-provider) KeyCloak |  |  |  |  |  |
+| [W1](https://github.com/NASA-IMPACT/veda-auth-central/blob/main/docs/use-case-evaluation/workflows.md#workflow-1-configuring-the-upstream-authentication-provider) Custos |  |  |  |  |  |
+| [W2](https://github.com/NASA-IMPACT/veda-auth-central/blob/main/docs/use-case-evaluation/workflows.md#workflow-2-provisioning-and-configuring-authentication-clients) KeyCloak | 
+| [W2](https://github.com/NASA-IMPACT/veda-auth-central/blob/main/docs/use-case-evaluation/workflows.md#workflow-2-provisioning-and-configuring-authentication-clients) Custos | 
+| [W3](https://github.com/NASA-IMPACT/veda-auth-central/blob/main/docs/use-case-evaluation/workflows.md#workflow-3-assigning-users-to-groups-via-a-ui) KeyCloak | 
+| [W3](https://github.com/NASA-IMPACT/veda-auth-central/blob/main/docs/use-case-evaluation/workflows.md#workflow-3-assigning-users-to-groups-via-a-ui) Custos | 
+| [W4](https://github.com/NASA-IMPACT/veda-auth-central/blob/main/docs/use-case-evaluation/workflows.md#workflow-4-expose-roles--capabilities-to-services) KeyCloak | 
+| [W4](https://github.com/NASA-IMPACT/veda-auth-central/blob/main/docs/use-case-evaluation/workflows.md#workflow-4-expose-roles--capabilities-to-services) Custos | 
