@@ -35,8 +35,8 @@ To evaluate these workflows, each cell in the below shall be given
 | W2 Custos | 
 | W3 KeyCloak | 
 | W3 Custos | 
-| 4 KeyCloak | 
-| 4 Custos | 
-| 5 KeyCloak |
-| 5 Custos |
+| W4 KeyCloak | 
+| W4 Custos | 
+| W5 KeyCloak |
+| W5 Custos |
 
