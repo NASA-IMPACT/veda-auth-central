@@ -33,14 +33,14 @@ To evaluate these workflows, each cell in the below shall be given
 
 | [Workflow](https://github.com/NASA-IMPACT/veda-auth-central/blob/main/docs/use-case-evaluation/workflows.md) | (E1) Already implemented | (E2) Built by VEDA | (E3) Ongoing Maintenance Effort | (E4) Level of Effort | (E5) User Experience | (E6) Ease of future change | 
 | - | - | - | - | - | - | - |
-| [W1](https://github.com/NASA-IMPACT/veda-auth-central/blob/main/docs/use-case-evaluation/workflows.md#workflow-1-configuring-the-upstream-authentication-provider) KeyCloak |  |  |  |  |  |  |
-| [W1](https://github.com/NASA-IMPACT/veda-auth-central/blob/main/docs/use-case-evaluation/workflows.md#workflow-1-configuring-the-upstream-authentication-provider) Custos |  |  |  |  |  |  |
-| [W2](https://github.com/NASA-IMPACT/veda-auth-central/blob/main/docs/use-case-evaluation/workflows.md#workflow-2-provisioning-and-configuring-authentication-clients) KeyCloak |  | 
-| [W2](https://github.com/NASA-IMPACT/veda-auth-central/blob/main/docs/use-case-evaluation/workflows.md#workflow-2-provisioning-and-configuring-authentication-clients) Custos |  | 
-| [W3](https://github.com/NASA-IMPACT/veda-auth-central/blob/main/docs/use-case-evaluation/workflows.md#workflow-3-assigning-users-to-groups-via-a-ui) KeyCloak |  | 
-| [W3](https://github.com/NASA-IMPACT/veda-auth-central/blob/main/docs/use-case-evaluation/workflows.md#workflow-3-assigning-users-to-groups-via-a-ui) Custos |  | 
-| [W4](https://github.com/NASA-IMPACT/veda-auth-central/blob/main/docs/use-case-evaluation/workflows.md#workflow-4-expose-roles--capabilities-to-services) KeyCloak |  | 
-| [W4](https://github.com/NASA-IMPACT/veda-auth-central/blob/main/docs/use-case-evaluation/workflows.md#workflow-4-expose-roles--capabilities-to-services) Custos |  | 
+| W1 KeyCloak |  |  |  |  |  |  |
+| W1 Custos |  |  |  |  |  |  |
+| W2 KeyCloak |  |  |  |  |  |  |
+| W2 Custos |  |  |  |  |  |  |
+| [W3](https://docs.google.com/document/d/1Jbqj89mzKYCDRxNI5VQ1WYLWQVq_93hGW6XaSm11cGs/edit?tab=t.0#heading=h.was12i5zxbgb) KeyCloak | Yes (KeyCloak feature in preview) | No (KeyCloak builtin) | None | 0 | 4 (using KeyCloak UI) | 5 (easy e.g. to expand list of permissions) |
+| [W3](https://docs.google.com/document/d/14UXEQWEouGRIUbI4epmbGSH2svYWbTKxjxNf3TR_ohw/edit?tab=t.0#heading=h.was12i5zxbgb) Custos |  |  |  |  |  |  |
+| W4 KeyCloak |  |  |  |  |  |  |
+| W4 Custos |  |  |  |  |  |  |
 
 ## Cost estimates
 
