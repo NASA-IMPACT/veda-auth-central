@@ -27,7 +27,7 @@ To evaluate these workflows, each cell in the below shall be given
 
 ## Matrix
 
-| [Workflow](https://github.com/NASA-IMPACT/veda-auth-central/blob/main/docs/use-case-evaluation/workflows.md) | (E1) Existing upstream features | (E2) Building ourselves? | (E3) Ongoing Maintenance Effort | (E4) User Experience | (E5) Ease of future change | 
+| [Workflow](https://github.com/NASA-IMPACT/veda-auth-central/blob/main/docs/use-case-evaluation/workflows.md) | (E1) Already implemented | (E2) Built by VEDA | (E3) Ongoing Maintenance Effort | (E4) User Experience | (E5) Ease of future change | 
 | - | - | - | - | - | - |
 | [W1](https://github.com/NASA-IMPACT/veda-auth-central/blob/main/docs/use-case-evaluation/workflows.md#workflow-1-configuring-the-upstream-authentication-provider) KeyCloak |  |  |  |  |  |
 | [W1](https://github.com/NASA-IMPACT/veda-auth-central/blob/main/docs/use-case-evaluation/workflows.md#workflow-1-configuring-the-upstream-authentication-provider) Custos |  |  |  |  |  |
