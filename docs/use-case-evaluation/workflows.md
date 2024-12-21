@@ -156,6 +156,8 @@ Based on our current set of use cases, this is only used by people who are tryin
 1. End Users would need to use this UI to enter any tokens they have
 2. Relying Party Maintainers would need to configure wether they need access to any specific tokens or not.
 
+   For example, if JupyterHub wants to get access to the earthdata login token and the DPS token, the JupyterHub
+   maintainers would need to configure their server to fetch it as appropriate.
 
 #### Documentation on this workflow
 
