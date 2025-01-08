@@ -31,8 +31,8 @@ To evaluate these workflows, each cell in the below shall be given
 
 ## Matrix
 
-| [Workflow](https://github.com/NASA-IMPACT/veda-auth-central/blob/main/docs/use-case-evaluation/workflows.md) | (E1) Already implemented | (E2) Built by VEDA | (E4) Level of Effort | (E3) Ongoing Maintenance Effort | (E6) Ease of future change | 
-| - | - | - | - | - | - | - |
+| [Workflow](https://github.com/NASA-IMPACT/veda-auth-central/blob/main/docs/use-case-evaluation/workflows.md) | (E1) Already implemented | (E2) Built by VEDA | (E3) Level of Effort | (E4) Ongoing Maintenance Effort | (E5) Ease of future change | 
+| - | - | - | - | - | - |
 | W1 KeyCloak |  |  |  |  |  |  |
 | W1 Custos |  |  |  |  |  |  |
 | W2 KeyCloak |  |  |  |  |  |  |
