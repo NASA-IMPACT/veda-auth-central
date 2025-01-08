@@ -132,3 +132,33 @@ Depending on the Relying Party, mapping groups to roles / capabilities could be 
 
 1. Keycloak -> (provide link)
 2. Custos / veda-auth-central -> (provide link)
+
+
+### Workflow 5: User Profiles for credential storage
+
+#### Use cases served
+
+[8](https://github.com/NASA-IMPACT/veda-auth-central/issues/130), 
+[9](https://github.com/NASA-IMPACT/veda-auth-central/issues/131), 
+[10](https://github.com/NASA-IMPACT/veda-auth-central/issues/132)
+
+#### Description
+
+We want to provide a place where users can store specific authentication tokens for third party services (such as DPS jobs or Earthdata login or other HPC systems). End users need a UI where they can store these tokens, and specific services that have permissions to retrieve these should be able to retrieve them.
+
+#### Frequency of use
+
+Based on our current set of use cases, this is only used by people who are trying to do something reasonably advanced - access external compute resources from within our compute resources. So not frequent yet.
+
+#### Who would perform this workflow?
+
+1. End Users would need to use this UI to enter any tokens they have
+2. Relying Party Maintainers would need to configure wether they need access to any specific tokens or not.
+
+   For example, if JupyterHub wants to get access to the earthdata login token and the DPS token, the JupyterHub
+   maintainers would need to configure their server to fetch it as appropriate.
+
+#### Documentation on this workflow
+
+1. Keycloak -> (provide link)
+2. Custos / veda-auth-central -> (provide link)
