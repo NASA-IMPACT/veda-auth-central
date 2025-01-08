@@ -138,7 +138,6 @@ Depending on the Relying Party, mapping groups to roles / capabilities could be 
 
 #### Use cases served
 
-[7](https://github.com/NASA-IMPACT/veda-auth-central/issues/129), 
 [8](https://github.com/NASA-IMPACT/veda-auth-central/issues/130), 
 [9](https://github.com/NASA-IMPACT/veda-auth-central/issues/131), 
 [10](https://github.com/NASA-IMPACT/veda-auth-central/issues/132)
