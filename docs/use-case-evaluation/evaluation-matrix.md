@@ -31,16 +31,16 @@ To evaluate these workflows, each cell in the below shall be given
 
 ## Matrix
 
-| [Workflow](https://github.com/NASA-IMPACT/veda-auth-central/blob/main/docs/use-case-evaluation/workflows.md) | (E1) Already implemented | (E2) Built by VEDA | (E4) Level of Effort | (E3) Ongoing Maintenance Effort | (E6) Ease of future change | 
+| [Workflow](https://github.com/NASA-IMPACT/veda-auth-central/blob/main/docs/use-case-evaluation/workflows.md) | (E1) Already implemented | (E2) Built by VEDA | (E3) Level of Effort | (E4) Ongoing Maintenance Effort | (E5) Ease of future change | 
 | - | - | - | - | - | - |
-| W1 KeyCloak |  |  |  |  |  |
-| W1 Custos |  |  |  |  |  |
-| W2 KeyCloak |  |  |  |  |  |
-| W2 Custos |  |  |  |  |  |
-| W3 KeyCloak |  |  |  |  |  |
-| W3 Custos |  |  |  |  |  |
-| W4 KeyCloak |  |  |  |  |  |
-| W4 Custos |  |  |  |  |  |
+| W1 KeyCloak |  |  |  |  |  |  |
+| W1 Custos |  |  |  |  |  |  |
+| W2 KeyCloak |  |  |  |  |  |  |
+| W2 Custos |  |  |  |  |  |  |
+| [W3](https://docs.google.com/document/d/1Jbqj89mzKYCDRxNI5VQ1WYLWQVq_93hGW6XaSm11cGs/edit?tab=t.0#heading=h.was12i5zxbgb) KeyCloak | Yes (KeyCloak feature in preview) | No (KeyCloak builtin) | 1 sprint to document | 5 (only documentation changes required on upstream changes) | 5 (easy e.g. to expand list of permissions) |
+| W3 Custos |  |  |  |  |  |  |
+| W4 KeyCloak |  |  |  |  |  |  |
+| W4 Custos |  |  |  |  |  |  |
 
 ## Cost estimates
 
